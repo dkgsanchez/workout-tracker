@@ -8,3 +8,10 @@ A full-stack workout tracking application built while learning modern web develo
 - Review workout history
 - Track strength progress
 - Practice full-stack software development
+
+## Planned technology stack
+
+- React and TypeScript
+- Node.js and Express
+- PostgreSQL
+- Vitest and automated testing
