@@ -3,3 +3,6 @@ scratch/
 
 # Installed packages 
 node_modules/
+
+# Generated build output
+dist/
