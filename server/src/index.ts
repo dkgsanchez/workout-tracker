@@ -1,6 +1,7 @@
 import express from 'express';
 
 const app = express();
+app.use(express.json());
 const PORT = 3000;
 const workouts = [
     {
@@ -35,6 +36,28 @@ app.get('/workouts/:id', (req, res) => {
     }
 
     return res.json(workout);
+});
+
+app.post('/workouts', (req, res) => {
+    const { name, completed } = req.body;
+    if (typeof name !== 'string') {
+        return res.status(400).json({message: "Name must be a string."});
+    }
+    if (name.trim().length === 0) {
+        return res.status(400).json({message: "Name cannot be empty."});
+    }
+    if (typeof completed !== 'boolean') {
+        return res.status(400).json({message: "Completed must be a boolean (true/false)."});
+    }
+
+    const workout = {
+        id: workouts.length + 1,
+        name: name.trim(),
+        completed
+    }; 
+    workouts.push(workout);
+
+    return res.status(201).json(workout);
 });
 
 app.listen(PORT, () => {
