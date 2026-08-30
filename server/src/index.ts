@@ -113,6 +113,22 @@ app.patch('/workouts/:id', (req, res) => {
 
 });
 
+app.delete('/workouts/:id', (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) {
+        return res.status(400).json({ message: "ID must be a positive integer."});
+    }
+
+    const index = workouts.findIndex((workout) => workout.id === id);
+    if (index === -1) {
+        return res.status(404).json({ message: "Workout does not exist."});
+    }
+
+    workouts.splice(index, 1);
+
+    return res.status(204).send();
+});
+
 app.listen(PORT, () => {
     console.log('Server running on port 3000');
 });
