@@ -6,3 +6,6 @@ node_modules/
 
 # Generated build output
 dist/
+
+# Environment variables
+.env

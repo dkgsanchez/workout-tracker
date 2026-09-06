@@ -1,8 +1,17 @@
 import express from 'express';
+import pg from 'pg';
 
+const { Pool } = pg;
 const app = express();
 app.use(express.json());
 const PORT = 3000;
+const pool = new Pool({
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: Number(process.env.DB_PORT)
+});
 
 type Workout = {
     id: number;
@@ -15,42 +24,40 @@ type WorkoutUpdates = {
     completed?: boolean;
 };
 
-const workouts: Workout[] = [
-    {
-        id: 1,
-        name: "Push day",
-        completed: true
-    },
-    {
-        id: 2,
-        name: "Pull day",
-        completed: false
-    }
-];
-
 app.get('/', (req, res) => {
     res.send('Workout Tracker API');
 });
 
-app.get('/workouts', (req, res) => {
-    res.json(workouts);
+app.get('/workouts', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM workouts;');
+        return res.json(result.rows);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({message: "Internal server error."});
+    }
 });
 
-app.get('/workouts/:id', (req, res) => {
+app.get('/workouts/:id', async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || id < 1) {
         return res.status(400).json({message: "ID must be a positive integer."});
     }
 
-    const workout = workouts.find((workout) => workout.id === id);
-    if (workout === undefined) {
-        return res.status(404).json({message: "Workout does not exist."});
-    }
+    try { 
+        const result = await pool.query('SELECT * FROM workouts WHERE id = $1', [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({message: "Workout does not exist."});
+        }
 
-    return res.json(workout);
+        return res.json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({message: "Internal server error."});
+    }
 });
 
-app.post('/workouts', (req, res) => {
+app.post('/workouts', async (req, res) => {
     const { name, completed } = req.body;
     if (typeof name !== 'string') {
         return res.status(400).json({message: "Name must be a string."});
@@ -58,75 +65,108 @@ app.post('/workouts', (req, res) => {
     if (name.trim().length === 0) {
         return res.status(400).json({message: "Name cannot be empty."});
     }
-    if (typeof completed !== 'boolean') {
+    if (completed !== undefined && typeof completed !== 'boolean') {
         return res.status(400).json({message: "Completed must be a boolean (true/false)."});
     }
 
-    const workout = {
-        id: workouts.length + 1,
-        name: name.trim(),
-        completed
-    }; 
-    workouts.push(workout);
-
-    return res.status(201).json(workout);
+    try {
+        if (completed !== undefined) {
+            const result = await pool.query('INSERT INTO workouts (name, completed) VALUES ($1, $2) RETURNING *;', [name.trim(), completed]);
+            return res.status(201).json(result.rows[0]);
+        } else {
+            const result = await pool.query('INSERT INTO workouts (name) VALUES ($1) RETURNING *;', [name.trim()]);
+            return res.status(201).json(result.rows[0]);
+        }
+        
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({message: "Internal server error."});
+    }
 });
 
-app.patch('/workouts/:id', (req, res) => {
+app.patch('/workouts/:id', async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || id < 1) {
         return res.status(400).json({ message: "ID must be a positive integer." });
     }
 
-    const workout = workouts.find((workout) => workout.id === id);
-    if (workout === undefined) {
-        return res.status(404).json({ message: "Workout does not exist."});
-    }
-
     const updates: WorkoutUpdates = req.body;
+    const { name, completed } = updates;
 
-    if (updates.name === undefined && updates.completed === undefined) {
+    if (name === undefined && completed === undefined) {
         return res.status(400).json({ message: "At least one field must be provided."});
     }
 
-    if (updates.name !== undefined && typeof updates.name !== 'string') {
+    if (name !== undefined && typeof name !== 'string') {
         return res.status(400).json({ message: "Name must be a string."});
     }
 
-    if (updates.name !== undefined && updates.name.trim() === '') {
+    if (name !== undefined && name.trim() === '') {
         return res.status(400).json({ message: "Name cannot be empty."});
     }
 
-    if (updates.completed !== undefined && typeof updates.completed !== 'boolean') {
+    if (completed !== undefined && typeof completed !== 'boolean') {
         return res.status(400).json({ message: "Completed must be a boolean (true/false)."});
     }
 
-    if (updates.name !== undefined) {
-        workout.name = updates.name.trim();
+    try {
+        if (name !== undefined && completed === undefined) {
+            const result = await pool.query(
+                'UPDATE workouts SET name = $1 WHERE id = $2 RETURNING *',
+                 [name.trim(), id]
+                );
+            
+            if (result.rows.length === 0) {
+                return res.status(404).json({message: "Workout does not exist."});
+            }
+
+            return res.json(result.rows[0]);
+        } else if (completed !== undefined && name === undefined) {
+            const result = await pool.query(
+                'UPDATE workouts SET completed = $1 WHERE id = $2 RETURNING *',
+                 [completed, id]
+                );
+
+            if (result.rows.length === 0) {
+                return res.status(404).json({message: "Workout does not exist."});
+            }
+
+            return res.json(result.rows[0]);
+        } else if (completed !== undefined && name !== undefined) {
+            const result = await pool.query(
+                'UPDATE workouts SET name = $1, completed = $2 WHERE id = $3 RETURNING *',
+                 [name.trim(), completed, id]
+                );
+            
+            if (result.rows.length === 0) {
+                return res.status(404).json({message: "Workout does not exist."});
+            }
+
+            return res.json(result.rows[0]);
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({message: "Internal server error."});
+
     }
-
-    if (updates.completed !== undefined) {
-        workout.completed = updates.completed;
-    }
-
-    return res.json(workout);
-
 });
 
-app.delete('/workouts/:id', (req, res) => {
+app.delete('/workouts/:id', async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || id < 1) {
         return res.status(400).json({ message: "ID must be a positive integer."});
     }
 
-    const index = workouts.findIndex((workout) => workout.id === id);
-    if (index === -1) {
-        return res.status(404).json({ message: "Workout does not exist."});
+    try {
+        const result = await pool.query('DELETE FROM workouts where id = $1 RETURNING *', [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({message: "Workout does not exist."});
+        }
+        return res.status(204).send();
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({message: "Internal server error."});
     }
-
-    workouts.splice(index, 1);
-
-    return res.status(204).send();
 });
 
 app.listen(PORT, () => {
