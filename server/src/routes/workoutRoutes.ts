@@ -61,7 +61,7 @@ router.patch('/:id', async (req, res) => {
         return res.status(400).json({ message: "ID must be a positive integer." });
     }
 
-    const updates: WorkoutUpdates = req.body;
+    const updates: WorkoutUpdates = req.body ?? {};
     const { name, completed } = updates;
 
     if (name === undefined && completed === undefined) {
