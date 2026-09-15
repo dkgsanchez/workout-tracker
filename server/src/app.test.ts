@@ -104,22 +104,28 @@ describe('database-backed workout routes', () => {
         expect(result.rows.length).toBe(0);
     });
 
-    test('PATCH /workouts/:id returns 400 for no body', async () => {
-        const response = await request(app).patch('/workouts/999');
-        expect(response.status).toBe(400);
+    test('GET /workouts/:id returns 404 for non-existent workout', async () => {
+        const response = await request(app).get('/workouts/1');
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({message: 'Workout does not exist.'});
     });
 
     test('PATCH /workouts/:id returns 404 for non-existent workout', async () => {
         const response = await request(app).patch('/workouts/999').send({completed: true});
         expect(response.status).toBe(404);
+        expect(response.body).toEqual({message: "Workout does not exist."});
     });
 
     test('DELETE /workouts/:id returns 404 for non-existent workout', async () => {
         const response = await request(app).delete('/workouts/999');
         expect(response.status).toBe(404);
+        expect(response.body).toEqual({message: "Workout does not exist."});
     });
 
+});
 
+test('tests use test database', () => {
+    expect(process.env.DB_NAME).toBe('workout_tracker_test');
 });
 
 test('GET / returns Workout Tracker API', async () => {
@@ -138,7 +144,7 @@ test('GET /workouts/abc returns 400 for invalid ID', async () => {
     });
 });
 
-test('POST /workouts returns 400 for invalid name', async () => {
+test('POST /workouts returns 400 for invalid \'name\' property', async () => {
     const response = await request(app).post('/workouts').send({name: 123});
 
     expect(response.status).toBe(400);
@@ -147,7 +153,16 @@ test('POST /workouts returns 400 for invalid name', async () => {
     });
 });
 
-test('tests use test database', () => {
-    expect(process.env.DB_NAME).toBe('workout_tracker_test');
+test ('POST /workouts returns 400 for invalid \'completed\' property', async () => {
+    const response = await request(app).post('/workouts').send({name:'Push day', completed:123});
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+        message: 'Completed must be a boolean (true/false).'
+    });
+});
 
+test('PATCH /workouts/:id returns 400 for no body', async () => {
+    const response = await request(app).patch('/workouts/999');
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({message: 'At least one field must be provided.'});
 });
