@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type SubmitEvent } from 'react'
+import { useEffect, useState, type ChangeEvent, type SubmitEvent } from 'react'
 
 type Workout = {
   id: number
@@ -35,6 +35,15 @@ function App() {
       : { ...workout, completed: !workout.completed }
     ))
   }
+
+  useEffect(() => {
+    async function loadWorkouts() {
+      const response = await fetch('http://localhost:3000/workouts')
+      const data: Workout[] = await response.json()
+      setWorkouts(data)
+    }
+    loadWorkouts()
+  }, [])
 
   return (
     <div>
