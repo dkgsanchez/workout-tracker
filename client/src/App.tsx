@@ -29,7 +29,7 @@ function App() {
     })
 
     const workout: Workout = await response.json()
-    
+
     setWorkouts([...workouts, workout])
     setWorkoutName('')
   }
@@ -42,11 +42,28 @@ function App() {
     setWorkouts(workouts.filter(workout => workout.id !== idToDelete))
   }
 
-  function handleToggleWorkout(idToToggle: number) {
-    setWorkouts(workouts.map(workout => 
-      workout.id !== idToToggle 
-      ? workout 
-      : { ...workout, completed: !workout.completed }
+  async function handleToggleWorkout(idToToggle: number) {
+    const workout = workouts.find((workout) => workout.id === idToToggle)
+    if (!workout) {
+      return
+    }
+
+    const response = await fetch(`http://localhost:3000/workouts/${idToToggle}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        completed: !workout.completed
+      })
+    })
+
+    const updatedWorkout: Workout = await response.json()
+
+    setWorkouts(workouts.map((workout) => 
+      workout.id === idToToggle 
+      ? updatedWorkout 
+      : workout
     ))
   }
 
