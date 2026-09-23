@@ -1,0 +1,64 @@
+import { useState, type ChangeEvent, type SubmitEvent } from 'react'
+
+type Workout = {
+  id: number
+  name: string
+  completed: boolean
+}
+
+function App() {
+  const [workoutName, setWorkoutName] = useState('')
+  const [workouts, setWorkouts] = useState<Workout[]>([])
+
+  function handleAddWorkout(event: SubmitEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (workoutName.trim() === '') {
+      return
+    }
+    setWorkouts([...workouts, {id: Date.now(), name: workoutName.trim(), completed: false}])
+    setWorkoutName('')
+  }
+
+  function handleWorkoutNameChange(event: ChangeEvent<HTMLInputElement>) {
+    setWorkoutName(event.target.value)
+  }
+
+  function handleDeleteWorkout(idToDelete: number) {
+    setWorkouts(workouts.filter(workout => workout.id !== idToDelete))
+  }
+
+  function handleToggleWorkout(idToToggle: number) {
+    setWorkouts(workouts.map(workout => 
+      workout.id !== idToToggle 
+      ? workout 
+      : { ...workout, completed: !workout.completed }
+    ))
+  }
+
+  return (
+    <div>
+      <h1>Workout Tracker</h1>
+      <p>Track your workouts.</p>
+      <p>Workouts added: {workouts.length}</p>
+      {workouts.length === 0 ? (
+        <p>No workouts yet.</p>
+      ) : (
+        workouts.map((workout) => (
+          <div key={workout.id}>
+            <p>{workout.name}</p>
+            <p>{workout.completed ? 'Completed' : 'Not completed'}</p>
+            <button onClick={() => handleDeleteWorkout(workout.id)}>Delete workout</button>
+            <button onClick={() => handleToggleWorkout(workout.id)}>Toggle workout</button>
+          </div>
+        ))
+      )}
+      <form onSubmit={handleAddWorkout}>
+        <input value={workoutName} onChange={handleWorkoutNameChange} />
+        <button>Add workout</button>
+      </form>
+    </div>
+  )
+}
+
+export default App
