@@ -10,13 +10,27 @@ function App() {
   const [workoutName, setWorkoutName] = useState('')
   const [workouts, setWorkouts] = useState<Workout[]>([])
 
-  function handleAddWorkout(event: SubmitEvent<HTMLFormElement>) {
+  async function handleAddWorkout(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
 
     if (workoutName.trim() === '') {
       return
     }
-    setWorkouts([...workouts, {id: Date.now(), name: workoutName.trim(), completed: false}])
+
+    const response = await fetch('http://localhost:3000/workouts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: workoutName.trim(),
+        completed: false
+      })
+    })
+
+    const workout: Workout = await response.json()
+    
+    setWorkouts([...workouts, workout])
     setWorkoutName('')
   }
 
