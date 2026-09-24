@@ -9,6 +9,7 @@ type Workout = {
 function App() {
   const [workoutName, setWorkoutName] = useState('')
   const [workouts, setWorkouts] = useState<Workout[]>([])
+  const [error, setError] = useState('')
 
   async function handleAddWorkout(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -75,9 +76,17 @@ function App() {
 
   useEffect(() => {
     async function loadWorkouts() {
-      const response = await fetch('http://localhost:3000/workouts')
-      const data: Workout[] = await response.json()
-      setWorkouts(data)
+      try {
+        const response = await fetch('http://localhost:3000/workouts')
+        if (!response.ok) {
+          throw new Error(`Failed to load workouts: ${response.status}`)
+        }
+        const data: Workout[] = await response.json()
+        setWorkouts(data)
+      } catch (error) {
+        console.error(error)
+        setError('Failed to load workouts')
+      }
     }
     loadWorkouts()
   }, [])
@@ -86,6 +95,7 @@ function App() {
     <div>
       <h1>Workout Tracker</h1>
       <p>Track your workouts.</p>
+      {error && <p>{error}</p>}
       <p>Workouts added: {workouts.length}</p>
       {workouts.length === 0 ? (
         <p>No workouts yet.</p>
