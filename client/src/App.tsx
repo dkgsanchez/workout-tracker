@@ -11,6 +11,10 @@ function App() {
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [error, setError] = useState('')
 
+  function handleWorkoutNameChange(event: ChangeEvent<HTMLInputElement>) {
+    setWorkoutName(event.target.value)
+  }
+
   async function handleAddWorkout(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -46,17 +50,22 @@ function App() {
     }
   }
 
-  function handleWorkoutNameChange(event: ChangeEvent<HTMLInputElement>) {
-    setWorkoutName(event.target.value)
-  }
-
   async function handleDeleteWorkout(idToDelete: number) {
-    const response = await fetch(`http://localhost:3000/workouts/${idToDelete}`, {
-      method: 'DELETE'
-    })
+    setError('')
 
-    if (response.ok) {
+    try {
+      const response = await fetch(`http://localhost:3000/workouts/${idToDelete}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete workout: ${response.status}`)
+      }
+
       setWorkouts(workouts.filter(workout => workout.id !== idToDelete))
+    } catch (error) {
+      console.error(error)
+      setError('Failed to delete workout')
     }
   }
 
