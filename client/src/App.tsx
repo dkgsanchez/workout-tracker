@@ -38,8 +38,14 @@ function App() {
     setWorkoutName(event.target.value)
   }
 
-  function handleDeleteWorkout(idToDelete: number) {
-    setWorkouts(workouts.filter(workout => workout.id !== idToDelete))
+  async function handleDeleteWorkout(idToDelete: number) {
+    const response = await fetch(`http://localhost:3000/workouts/${idToDelete}`, {
+      method: 'DELETE'
+    })
+
+    if (response.ok) {
+      setWorkouts(workouts.filter(workout => workout.id !== idToDelete))
+    }
   }
 
   async function handleToggleWorkout(idToToggle: number) {
