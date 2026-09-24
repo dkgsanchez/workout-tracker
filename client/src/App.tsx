@@ -66,23 +66,34 @@ function App() {
       return
     }
 
-    const response = await fetch(`http://localhost:3000/workouts/${idToToggle}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        completed: !workout.completed
+    setError('')
+    
+    try {
+      const response = await fetch(`http://localhost:3000/workouts/${idToToggle}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          completed: !workout.completed
+        })
       })
-    })
 
-    const updatedWorkout: Workout = await response.json()
+      if (!response.ok) {
+        throw new Error(`Failed to update workout: ${response.status}`)
+      }
 
-    setWorkouts(workouts.map((workout) => 
-      workout.id === idToToggle 
-      ? updatedWorkout 
-      : workout
-    ))
+      const updatedWorkout: Workout = await response.json()
+
+      setWorkouts(workouts.map((workout) => 
+        workout.id === updatedWorkout.id 
+        ? updatedWorkout 
+        : workout
+      ))
+    } catch (error) {
+      console.error(error)
+      setError('Failed to update workout')
+    }
   }
 
   useEffect(() => {
