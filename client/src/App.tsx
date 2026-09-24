@@ -18,21 +18,32 @@ function App() {
       return
     }
 
-    const response = await fetch('http://localhost:3000/workouts', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        name: workoutName.trim(),
-        completed: false
+    setError('')
+
+    try {
+      const response = await fetch('http://localhost:3000/workouts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: workoutName.trim(),
+          completed: false
+        })
       })
-    })
 
-    const workout: Workout = await response.json()
+      if (!response.ok) {
+        throw new Error(`Failed to add workout: ${response.status}`)
+      }
 
-    setWorkouts([...workouts, workout])
-    setWorkoutName('')
+      const workout: Workout = await response.json()
+
+      setWorkouts([...workouts, workout])
+      setWorkoutName('')
+    } catch (error) {
+      console.error(error)
+      setError('Failed to add workout')
+    }
   }
 
   function handleWorkoutNameChange(event: ChangeEvent<HTMLInputElement>) {
