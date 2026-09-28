@@ -10,6 +10,8 @@ function App() {
   const [workoutName, setWorkoutName] = useState('')
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [error, setError] = useState('')
+  const [loadingError, setLoadingError] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
 
   function handleWorkoutNameChange(event: ChangeEvent<HTMLInputElement>) {
     setWorkoutName(event.target.value)
@@ -116,7 +118,9 @@ function App() {
         setWorkouts(data)
       } catch (error) {
         console.error(error)
-        setError('Failed to load workouts')
+        setLoadingError('Failed to load workouts')
+      } finally {
+        setIsLoading(false)
       }
     }
     loadWorkouts()
@@ -126,9 +130,12 @@ function App() {
     <div>
       <h1>Workout Tracker</h1>
       <p>Track your workouts.</p>
+      {!isLoading && !loadingError && <p>Workouts added: {workouts.length}</p>}
+      {loadingError && <p>{loadingError}</p>}
       {error && <p>{error}</p>}
-      <p>Workouts added: {workouts.length}</p>
-      {workouts.length === 0 ? (
+      {isLoading ? (
+        <p>Loading workouts...</p>
+      ) : loadingError ? null : workouts.length === 0 ? (
         <p>No workouts yet.</p>
       ) : (
         workouts.map((workout) => (
