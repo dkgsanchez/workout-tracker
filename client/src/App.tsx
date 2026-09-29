@@ -1,4 +1,5 @@
 import { useEffect, useState, type ChangeEvent, type SubmitEvent } from 'react'
+import './App.css'
 
 type Workout = {
   id: number
@@ -127,7 +128,7 @@ function App() {
   }, [])
 
   return (
-    <div>
+    <div className='app'>
       <h1>Workout Tracker</h1>
       <p>Track your workouts.</p>
       {!isLoading && !loadingError && <p>Workouts added: {workouts.length}</p>}
@@ -139,7 +140,7 @@ function App() {
         <p>No workouts yet.</p>
       ) : (
         workouts.map((workout) => (
-          <div key={workout.id}>
+          <div key={workout.id} className='workout'>
             <p>{workout.name}</p>
             <p>{workout.completed ? 'Completed' : 'Not completed'}</p>
             <button onClick={() => handleDeleteWorkout(workout.id)}>Delete workout</button>
