@@ -1,17 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type SubmitEvent } from 'react'
+import type { Workout } from './types/workout'
+import WorkoutItem from './components/WorkoutItem'
 import './App.css'
-
-type Workout = {
-  id: number
-  name: string
-  completed: boolean
-}
-
-type WorkoutItemProps = {
-  workout: Workout
-  onDelete: (id: number) => void
-  onToggle: (id: number) => void
-}
 
 type WorkoutFormProps = {
   workoutName: string
@@ -25,27 +15,6 @@ function WorkoutForm({ workoutName, onWorkoutNameChange, onSubmit }: WorkoutForm
       <input value={workoutName} onChange={onWorkoutNameChange}/>
       <button>Add workout</button>
     </form>
-  )
-}
-
-function WorkoutItem({ workout, onDelete, onToggle }: WorkoutItemProps) {
-  return (
-    <div className='workout'>
-      <p className='workout-name'>
-        {workout.name}
-      </p>
-      <p className={workout.completed ? 'completed' : 'not-completed'}>
-        {workout.completed ? 'Completed' : 'Not completed'}
-      </p>
-      <div className='workout-actions'>
-        <button className='delete-button' onClick={() => onDelete(workout.id)}>
-          Delete workout
-        </button>
-        <button className='toggle-button' onClick={() => onToggle(workout.id)}>
-          Toggle workout
-        </button>
-      </div>
-    </div>
   )
 }
 
