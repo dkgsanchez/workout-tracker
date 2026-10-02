@@ -141,10 +141,20 @@ function App() {
       ) : (
         workouts.map((workout) => (
           <div key={workout.id} className='workout'>
-            <p>{workout.name}</p>
-            <p>{workout.completed ? 'Completed' : 'Not completed'}</p>
-            <button onClick={() => handleDeleteWorkout(workout.id)}>Delete workout</button>
-            <button onClick={() => handleToggleWorkout(workout.id)}>Toggle workout</button>
+            <p className ='workout-name'>
+              {workout.name}
+            </p>
+            <p className ={workout.completed ? 'completed' : 'not-completed'}>
+              {workout.completed ? 'Completed' : 'Not completed'}
+            </p>
+            <div className='workout-actions'>
+              <button className ='delete-button' onClick={() => handleDeleteWorkout(workout.id)}>
+                Delete workout
+              </button>
+              <button className ='toggle-button' onClick={() => handleToggleWorkout(workout.id)}>
+                Toggle workout
+              </button>
+            </div>
           </div>
         ))
       )}
