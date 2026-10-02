@@ -13,6 +13,21 @@ type WorkoutItemProps = {
   onToggle: (id: number) => void
 }
 
+type WorkoutFormProps = {
+  workoutName: string
+  onWorkoutNameChange: (event: ChangeEvent<HTMLInputElement>) => void
+  onSubmit: (event: SubmitEvent<HTMLFormElement>) => void
+}
+
+function WorkoutForm({ workoutName, onWorkoutNameChange, onSubmit }: WorkoutFormProps) {
+  return (
+    <form onSubmit={onSubmit}>
+      <input value={workoutName} onChange={onWorkoutNameChange}/>
+      <button>Add workout</button>
+    </form>
+  )
+}
+
 function WorkoutItem({ workout, onDelete, onToggle }: WorkoutItemProps) {
   return (
     <div className='workout'>
@@ -170,10 +185,7 @@ function App() {
           <WorkoutItem key={workout.id} workout={workout} onDelete={handleDeleteWorkout} onToggle={handleToggleWorkout}/>
         ))
       )}
-      <form onSubmit={handleAddWorkout}>
-        <input value={workoutName} onChange={handleWorkoutNameChange} />
-        <button>Add workout</button>
-      </form>
+      <WorkoutForm workoutName={workoutName} onWorkoutNameChange={handleWorkoutNameChange} onSubmit={handleAddWorkout}/>
     </div>
   )
 }
