@@ -4,6 +4,8 @@ import WorkoutItem from './components/WorkoutItem'
 import WorkoutForm from './components/WorkoutForm'
 import './App.css'
 
+const API_URL = 'http://localhost:3000/workouts'
+
 function App() {
   const [workoutName, setWorkoutName] = useState('')
   const [workouts, setWorkouts] = useState<Workout[]>([])
@@ -25,7 +27,7 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch('http://localhost:3000/workouts', {
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -54,7 +56,7 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(`http://localhost:3000/workouts/${idToDelete}`, {
+      const response = await fetch(`${API_URL}/${idToDelete}`, {
         method: 'DELETE'
       })
 
@@ -78,7 +80,7 @@ function App() {
     setError('')
     
     try {
-      const response = await fetch(`http://localhost:3000/workouts/${idToToggle}`, {
+      const response = await fetch(`${API_URL}/${idToToggle}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
@@ -108,7 +110,7 @@ function App() {
   useEffect(() => {
     async function loadWorkouts() {
       try {
-        const response = await fetch('http://localhost:3000/workouts')
+        const response = await fetch(API_URL)
         if (!response.ok) {
           throw new Error(`Failed to load workouts: ${response.status}`)
         }
