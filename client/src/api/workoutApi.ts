@@ -10,3 +10,21 @@ export async function getWorkouts(): Promise<Workout[]> {
     const workouts: Workout[] = await response.json()
     return workouts
 }
+
+export async function createWorkout(name: string): Promise<Workout> {
+    const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            name,
+            completed: false
+        })
+    })
+    if (!response.ok) {
+        throw new Error(`Failed to add workout: ${response.status}`)
+    }
+    const workout: Workout = await response.json()
+    return workout
+}

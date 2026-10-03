@@ -2,7 +2,7 @@ import { useEffect, useState, type ChangeEvent, type SubmitEvent } from 'react'
 import type { Workout } from './types/workout'
 import WorkoutItem from './components/WorkoutItem'
 import WorkoutForm from './components/WorkoutForm'
-import { getWorkouts } from './api/workoutApi'
+import { createWorkout, getWorkouts } from './api/workoutApi'
 import './App.css'
 
 const API_URL = 'http://localhost:3000/workouts'
@@ -20,31 +20,12 @@ function App() {
 
   async function handleAddWorkout(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
-
     if (workoutName.trim() === '') {
       return
     }
-
     setError('')
-
     try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: workoutName.trim(),
-          completed: false
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to add workout: ${response.status}`)
-      }
-
-      const workout: Workout = await response.json()
-
+      const workout = await createWorkout(workoutName.trim())
       setWorkouts([...workouts, workout])
       setWorkoutName('')
     } catch (error) {
