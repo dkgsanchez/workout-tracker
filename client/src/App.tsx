@@ -2,6 +2,7 @@ import { useEffect, useState, type ChangeEvent, type SubmitEvent } from 'react'
 import type { Workout } from './types/workout'
 import WorkoutItem from './components/WorkoutItem'
 import WorkoutForm from './components/WorkoutForm'
+import { getWorkouts } from './api/workoutApi'
 import './App.css'
 
 const API_URL = 'http://localhost:3000/workouts'
@@ -110,12 +111,8 @@ function App() {
   useEffect(() => {
     async function loadWorkouts() {
       try {
-        const response = await fetch(API_URL)
-        if (!response.ok) {
-          throw new Error(`Failed to load workouts: ${response.status}`)
-        }
-        const data: Workout[] = await response.json()
-        setWorkouts(data)
+        const fetchedWorkouts = await getWorkouts()
+        setWorkouts(fetchedWorkouts)
       } catch (error) {
         console.error(error)
         setLoadingError('Failed to load workouts')
