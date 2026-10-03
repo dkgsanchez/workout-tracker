@@ -2,10 +2,8 @@ import { useEffect, useState, type ChangeEvent, type SubmitEvent } from 'react'
 import type { Workout } from './types/workout'
 import WorkoutItem from './components/WorkoutItem'
 import WorkoutForm from './components/WorkoutForm'
-import { createWorkout, getWorkouts, updateWorkout } from './api/workoutApi'
+import { createWorkout, deleteWorkout, getWorkouts, updateWorkout } from './api/workoutApi'
 import './App.css'
-
-const API_URL = 'http://localhost:3000/workouts'
 
 function App() {
   const [workoutName, setWorkoutName] = useState('')
@@ -36,16 +34,8 @@ function App() {
 
   async function handleDeleteWorkout(idToDelete: number) {
     setError('')
-
     try {
-      const response = await fetch(`${API_URL}/${idToDelete}`, {
-        method: 'DELETE'
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to delete workout: ${response.status}`)
-      }
-
+      await deleteWorkout(idToDelete)
       setWorkouts(workouts.filter(workout => workout.id !== idToDelete))
     } catch (error) {
       console.error(error)

@@ -45,3 +45,12 @@ export async function updateWorkout(id: number, completed: boolean): Promise<Wor
     const updatedWorkout: Workout = await response.json()
     return updatedWorkout
 }
+
+export async function deleteWorkout(id: number): Promise<void> {
+    const response = await fetch(`${API_URL}/${id}`, {
+        method: 'DELETE'
+    })
+    if (!response.ok) {
+        throw new Error(`Failed to delete workout: ${response.status}`)
+    }
+}
