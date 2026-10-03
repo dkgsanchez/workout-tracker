@@ -28,3 +28,20 @@ export async function createWorkout(name: string): Promise<Workout> {
     const workout: Workout = await response.json()
     return workout
 }
+
+export async function updateWorkout(id: number, completed: boolean): Promise<Workout> {
+    const response = await fetch(`${API_URL}/${id}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            completed
+        })
+    })
+    if (!response.ok) {
+        throw new Error(`Failed to update workout: ${response.status}`)
+    }
+    const updatedWorkout: Workout = await response.json()
+    return updatedWorkout
+}

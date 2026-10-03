@@ -2,7 +2,7 @@ import { useEffect, useState, type ChangeEvent, type SubmitEvent } from 'react'
 import type { Workout } from './types/workout'
 import WorkoutItem from './components/WorkoutItem'
 import WorkoutForm from './components/WorkoutForm'
-import { createWorkout, getWorkouts } from './api/workoutApi'
+import { createWorkout, getWorkouts, updateWorkout } from './api/workoutApi'
 import './App.css'
 
 const API_URL = 'http://localhost:3000/workouts'
@@ -58,26 +58,9 @@ function App() {
     if (!workout) {
       return
     }
-
     setError('')
-    
     try {
-      const response = await fetch(`${API_URL}/${idToToggle}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          completed: !workout.completed
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to update workout: ${response.status}`)
-      }
-
-      const updatedWorkout: Workout = await response.json()
-
+      const updatedWorkout = await updateWorkout(workout.id, !workout.completed)
       setWorkouts(workouts.map((workout) => 
         workout.id === updatedWorkout.id 
         ? updatedWorkout 
