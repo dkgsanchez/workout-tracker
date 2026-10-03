@@ -12,21 +12,24 @@ A full-stack workout tracking application currently in development.
 ## Technology stack
 
 - TypeScript
+- React
 - Node.js
 - Express.js
 - PostgreSQL
 - Vitest
 - Supertest
-- React
 
 ## Current features
 
-- Workout CRUD API
-- Input validation and error handling
+- Full-stack workout CRUD functionality
+- React frontend integrated with the REST API
 - PostgreSQL database persistence
-- Separated routing, repository, and database logic
+- Input validation and error handling
+- Loading and API error states in the frontend
+- Separated frontend components and API request logic
+- Separated backend routing, repository, and database logic
 - Automated API testing with Vitest and Supertest
 
 ## Status
 
-Work in progress. The backend is functional and tested, and the React frontend is currently being developed.
+Work in progress. Core workout CRUD functionality is implemented across the React frontend, Express backend, and PostgreSQL database. Further development will expand workout tracking features and improve the user interface.
