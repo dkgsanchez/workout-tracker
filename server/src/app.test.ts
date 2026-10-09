@@ -122,6 +122,29 @@ describe('database-backed workout routes', () => {
         expect(response.body).toEqual({message: "Workout does not exist."});
     });
 
+    test('GET /workouts/:id/exercises returns 400 for invalid workout ID', async () => {
+        const response = await request(app).get('/workouts/abc/exercises');
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "ID must be a positive integer."});
+    })
+
+    test('GET /workouts/:id/exercises returns 404 for non-existent workout', async () => {
+        const response = await request(app).get('/workouts/99999/exercises');
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({message: "Workout does not exist."});
+    })
+
+    test('GET /workouts/:id/exercises returns empty array when workout has no exercises', async () => {
+        const createWorkoutResponse = await request(app).post('/workouts').send({
+            name: 'Exercise Test Workout',
+            completed: false 
+        });
+        expect(createWorkoutResponse.status).toBe(201);
+        const workoutId = createWorkoutResponse.body.id;
+        const response = await request(app).get(`/workouts/${workoutId}/exercises`);
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual([]);
+    })
 });
 
 test('tests use test database', () => {
