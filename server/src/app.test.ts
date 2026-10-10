@@ -3,6 +3,7 @@ import { expect, test, beforeEach, describe } from 'vitest';
 import { app } from './app.js';
 import { pool } from './db.js';
 import type { Workout } from './types/workout.js';
+import type { Exercise } from './types/exercise.js';
 
 describe('database-backed workout routes', () => {
     beforeEach(async () => {
@@ -126,13 +127,13 @@ describe('database-backed workout routes', () => {
         const response = await request(app).get('/workouts/abc/exercises');
         expect(response.status).toBe(400);
         expect(response.body).toEqual({message: "ID must be a positive integer."});
-    })
+    });
 
     test('GET /workouts/:id/exercises returns 404 for non-existent workout', async () => {
         const response = await request(app).get('/workouts/99999/exercises');
         expect(response.status).toBe(404);
         expect(response.body).toEqual({message: "Workout does not exist."});
-    })
+    });
 
     test('GET /workouts/:id/exercises returns empty array when workout has no exercises', async () => {
         const createWorkoutResponse = await request(app).post('/workouts').send({
@@ -144,7 +145,84 @@ describe('database-backed workout routes', () => {
         const response = await request(app).get(`/workouts/${workoutId}/exercises`);
         expect(response.status).toBe(200);
         expect(response.body).toEqual([]);
-    })
+    });
+
+    test('GET /workouts/:id/exercises returns exercises for workout', async () => {
+        const createWorkoutResult = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workout = createWorkoutResult.rows[0];
+        const { id } = workout;
+        await pool.query<Exercise>(
+            'INSERT INTO exercises (workout_id, name) VALUES ($1, $2)',
+            [id, 'Bench press']
+        );
+
+        const response = await request(app).get(`/workouts/${id}/exercises`);
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveLength(1);
+        expect(response.body[0]).toMatchObject({ workout_id: id, name: 'Bench press'});
+    });
+
+    test('POST /workouts/:id/exercises creates an exercise', async () => {
+        const result = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workout = result.rows[0];
+        const { id } = workout;
+        const response = await request(app)
+            .post(`/workouts/${id}/exercises`)
+            .send({ name: "Bench press" }
+        );
+        expect(response.status).toBe(201);
+        expect(response.body).toMatchObject({
+            workout_id: id,
+            name: "Bench press"
+        });
+        expect(response.body.id).toEqual(expect.any(Number));
+    });
+
+    test('POST workouts/:id/exercises returns 400 for invalid workout ID', async () => {
+        const response = await request(app)
+            .post('/workouts/abc/exercises')
+            .send({ name: "Bench press" });
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ message: "ID must be a positive integer."});
+    });
+
+    test('POST workouts/:id/exercises returns 400 for non-string exercise name', async () => {
+        const response = await request(app)
+            .post('/workouts/1/exercises')
+            .send({ name: 1 });
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Exercise name must be a string."});
+    });
+
+    test('POST /workouts/:id/exercises returns 400 for empty exercise name', async () => {
+        const response = await request(app)
+            .post('/workouts/1/exercises')
+            .send({ name: "     "});
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Exercise name cannot be empty."});
+    });
+
+    test('POST /workouts/:id/exercises returns 400 for exercise name over 100 characters.', async () => {
+        const response = await request(app)
+            .post('/workouts/1/exercises')
+            .send({ name: "a".repeat(101) });
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Exercise name must be 100 characters or less."});
+    });
+
+    test('POST /workouts/:id/exercises returns 404 for non-existent workout', async () => {
+        const response = await request(app)
+            .post('/workouts/99999/exercises')
+            .send({ name: "Bench press "});
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({ message: "Workout does not exist." });
+    });
 });
 
 test('tests use test database', () => {

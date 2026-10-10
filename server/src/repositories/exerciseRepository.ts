@@ -9,4 +9,16 @@ async function findExercisesByWorkoutId(workoutId: number): Promise<Exercise[]> 
     return result.rows;
 }
 
-export { findExercisesByWorkoutId }
+async function createExercise(workoutId: number, name: string): Promise<Exercise> {
+    const result = await pool.query<Exercise>(
+        'INSERT INTO exercises (workout_id, name) VALUES ($1, $2) RETURNING *',
+        [workoutId, name]
+    );
+    const exercise = result.rows[0];
+    if (exercise === undefined) {
+        throw new Error("Exercise creation succeeded without returning a row.");
+    }
+    return exercise;
+}
+
+export { findExercisesByWorkoutId, createExercise };
