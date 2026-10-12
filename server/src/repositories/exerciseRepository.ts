@@ -21,4 +21,12 @@ async function createExercise(workoutId: number, name: string): Promise<Exercise
     return exercise;
 }
 
-export { findExercisesByWorkoutId, createExercise };
+async function deleteExercise(exerciseId: number, workoutId: number): Promise<Exercise | undefined> {
+    const result = await pool.query<Exercise>(
+        'DELETE FROM exercises WHERE id = $1 AND workout_id = $2 RETURNING *',
+        [exerciseId, workoutId]
+    );
+    return result.rows[0];
+}
+
+export { findExercisesByWorkoutId, createExercise, deleteExercise };

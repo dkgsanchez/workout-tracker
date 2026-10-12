@@ -223,6 +223,83 @@ describe('database-backed workout routes', () => {
         expect(response.status).toBe(404);
         expect(response.body).toEqual({ message: "Workout does not exist." });
     });
+
+    test('DELETE /workouts/:workoutId/exercises/:exerciseId deletes an exercise', async () => {
+        const createWorkoutResult = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId = createWorkoutResult.rows[0].id;
+        const createExerciseResult = await pool.query<Exercise>(
+            'INSERT INTO exercises (workout_id, name) VALUES ($1, $2) RETURNING *',
+            [workoutId, 'Bench press']
+        );
+        const exerciseId = createExerciseResult.rows[0].id;
+        const response = await request(app)
+            .delete(`/workouts/${workoutId}/exercises/${exerciseId}`);
+        expect(response.status).toBe(204);
+        const checkResult = await pool.query<Exercise>(
+            'SELECT * FROM exercises WHERE id = $1',
+            [exerciseId]
+        ); 
+        expect(checkResult.rows).toHaveLength(0);
+    });
+
+    test('DELETE /workouts/:workoutId/exercises/:exerciseId returns 400 for invalid workout ID', async () => {
+        const response = await request(app).delete('/workouts/abc/exercises/999999');
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ message: "Workout ID must be a positive integer." });
+    });
+
+    test('DELETE /workouts/:workoutId/exercises/:exerciseId returns 400 for invalid exercise ID', async () => {
+        const response = await request(app).delete('/workouts/999999/exercises/abc');
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ message: "Exercise ID must be a positive integer." });
+    });
+
+    test('DELETE /workouts/:workoutId/exercises/:exerciseId returns 404 for non-existent workout', async () => {
+        const response = await request(app).delete('/workouts/999999/exercises/999999');
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({ message: "Workout does not exist." });
+    });
+
+    test('DELETE /workouts/:workoutId/exercises/:exerciseId returns 404 for non-existent exercise', async () => {
+        const result = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId = result.rows[0].id;
+        const response = await request(app).delete(`/workouts/${workoutId}/exercises/999999`);
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({ message: "Exercise not found for this workout." });
+    });
+
+    test('DELETE /workouts/:workoutId/exercises/:exerciseId returns 404 when exercise belongs to another workout', async () => {
+        const createWorkout1Result = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const createWorkout2Result = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Pull day']
+        );
+        const workout1Id = createWorkout1Result.rows[0].id;
+        const workout2Id = createWorkout2Result.rows[0].id;
+        const createExerciseResult = await pool.query<Exercise>(
+            'INSERT INTO exercises (workout_id, name) VALUES ($1, $2) RETURNING *',
+            [workout1Id, 'Bench press']
+        );
+        const exerciseId = createExerciseResult.rows[0].id;
+        const response = await request(app)
+            .delete(`/workouts/${workout2Id}/exercises/${exerciseId}`);
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({ message: "Exercise not found for this workout." });
+        const checkResult = await pool.query<Exercise>(
+            'SELECT * FROM exercises WHERE id = $1',
+            [exerciseId]
+        );
+        expect(checkResult.rows).toHaveLength(1);
+    });
 });
 
 test('tests use test database', () => {
