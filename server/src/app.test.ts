@@ -300,6 +300,125 @@ describe('database-backed workout routes', () => {
         );
         expect(checkResult.rows).toHaveLength(1);
     });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId updates an exercise', async () => {
+        const createWorkoutResult = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId = createWorkoutResult.rows[0].id;
+        const createExerciseResult = await pool.query<Exercise>(
+            'INSERT INTO exercises (name, workout_id) VALUES ($1, $2) RETURNING *',
+            ['Bench press', workoutId]
+        );
+        const exerciseId = createExerciseResult.rows[0].id;
+        const response = await request(app)
+            .patch(`/workouts/${workoutId}/exercises/${exerciseId}`)
+            .send({ name: 'Incline dumbbell press'}      
+        ); 
+        expect(response.status).toBe(200);
+        expect(response.body).toMatchObject({ 
+            id: exerciseId, 
+            workout_id: workoutId, 
+            name: 'Incline dumbbell press'}
+        );
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId returns 400 for invalid workout ID', async () => {
+        const response = await request(app)
+            .patch('/workouts/abc/exercises/999999')
+            .send({name: 'Incline dumbbell press'}
+        );
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ message: "Workout ID must be a positive integer."});
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId returns 400 for invalid exercise ID', async () => {
+        const response = await request(app)
+            .patch('/workouts/999999/exercises/abc')
+            .send({name: 'Incline dumbbell press'}
+        );
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ message: "Exercise ID must be a positive integer."});
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId returns 400 for non-string exercise name', async () => {
+        const response = await request(app)
+            .patch('/workouts/999999/exercises/999999')
+            .send({name: 123}
+        );
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ message: "Exercise name must be a string."});
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId returns 400 for empty exercise name', async () => {
+        const response = await request(app)
+            .patch('/workouts/999999/exercises/999999')
+            .send({name: '      '}
+        );
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ message: "Exercise name cannot be empty."});
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId returns 400 for exercise name over 100 characters', async () => {
+        const response = await request(app)
+            .patch('/workouts/999999/exercises/999999')
+            .send({name: 'a'.repeat(101)}
+        );
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ message: "Exercise name must be 100 characters or less."});
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId returns 404 for non-existent workout', async () => {
+        const response = await request(app)
+            .patch('/workouts/999999/exercises/999999')
+            .send({name: 'Incline dumbbell press'}
+        );
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({ message: "Workout does not exist."});
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId returns 404 for non-existent exercise', async () => {
+        const createWorkoutResult = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId = createWorkoutResult.rows[0].id;
+        const response = await request(app)
+            .patch(`/workouts/${workoutId}/exercises/999999`)
+            .send({ name: 'Incline dumbbell press'}
+        );
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({ message: "Exercise not found for this workout."});
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId returns 404 when exercise belongs to another workout', async () => {
+        const createWorkoutResult1 = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const createWorkoutResult2 = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Pull day']
+        );
+        const workoutId1 = createWorkoutResult1.rows[0].id;
+        const workoutId2 = createWorkoutResult2.rows[0].id;
+        const createExerciseResult = await pool.query<Exercise>(
+            'INSERT INTO exercises (name, workout_id) VALUES ($1, $2) RETURNING *',
+            ['Bench press', workoutId1]
+        );
+        const exerciseId = createExerciseResult.rows[0].id;
+        const response = await request(app)
+            .patch(`/workouts/${workoutId2}/exercises/${exerciseId}`)
+            .send({ name: 'Incline dumbbell press'}      
+        ); 
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({message: "Exercise not found for this workout."})
+        const checkResult = await pool.query<Exercise>(
+            'SELECT * FROM exercises WHERE id = $1 AND workout_id = $2 AND name = $3',
+            [exerciseId, workoutId1, 'Bench press']);
+        expect(checkResult.rows).toHaveLength(1);
+    });
 });
 
 test('tests use test database', () => {

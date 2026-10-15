@@ -29,4 +29,12 @@ async function deleteExercise(exerciseId: number, workoutId: number): Promise<Ex
     return result.rows[0];
 }
 
-export { findExercisesByWorkoutId, createExercise, deleteExercise };
+async function updateExercise(exerciseId: number, workoutId: number, name: string): Promise<Exercise | undefined> {
+    const result = await pool.query<Exercise>(
+        'UPDATE exercises SET name = $1 WHERE id = $2 AND workout_id = $3 RETURNING *',
+        [name, exerciseId, workoutId]
+    );
+    return result.rows[0];
+}
+
+export { findExercisesByWorkoutId, createExercise, deleteExercise, updateExercise };
