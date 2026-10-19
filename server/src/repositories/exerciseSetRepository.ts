@@ -1,12 +1,13 @@
 import { pool } from '../db.js';
-import type { ExerciseSet, ExerciseSetUpdates } from '../types/exerciseSet.js';
+import type { ExerciseSet, ExerciseSetUpdates, ExerciseSetRow } from '../types/exerciseSet.js';
 
 async function findSetsByExerciseId(exerciseId: number): Promise<ExerciseSet[]> {
-    const result = await pool.query<ExerciseSet>(
+    const result = await pool.query<ExerciseSetRow>(
         'SELECT * FROM exercise_sets WHERE exercise_id = $1 ORDER BY set_number',
         [exerciseId]
     );
-    return result.rows;
+    const exerciseSetRows = result.rows;
+    return exerciseSetRows.map(toExerciseSet);
 }
 
 async function createExerciseSet(
@@ -16,18 +17,18 @@ async function createExerciseSet(
     weightKg?: number, 
     rpe?: number
 ): Promise<ExerciseSet> {
-    const result = await pool.query<ExerciseSet>(
+    const result = await pool.query<ExerciseSetRow>(
         'INSERT INTO exercise_sets \
         (exercise_id, set_number, reps, weight_kg, rpe) \
         VALUES ($1, $2, $3, $4, $5) \
         RETURNING *',
         [exerciseId, setNumber, reps, weightKg ?? null, rpe ?? null]
     );
-    const exerciseSet = result.rows[0];
-    if (exerciseSet === undefined) {
+    const exerciseSetRow = result.rows[0];
+    if (exerciseSetRow === undefined) {
         throw new Error("Set creation succeeded without returning a row.");
     }
-    return exerciseSet;
+    return toExerciseSet(exerciseSetRow);
 }
 
 async function updateExerciseSet(setId: number, exerciseId: number, updates: ExerciseSetUpdates): Promise<ExerciseSet | undefined> {
@@ -57,22 +58,32 @@ async function updateExerciseSet(setId: number, exerciseId: number, updates: Exe
 
     values.push(setId, exerciseId);
 
-    const result = await pool.query<ExerciseSet>(`
+    const result = await pool.query<ExerciseSetRow>(`
         UPDATE exercise_sets 
         SET ${updateClauses.join(', ')} 
         WHERE id = $${updateClauses.length+1} AND exercise_id = $${updateClauses.length+2}
         RETURNING *`,
         values
         );
-    return result.rows[0];
+    const exerciseSetRow = result.rows[0];
+    return exerciseSetRow !== undefined ? toExerciseSet(exerciseSetRow) : undefined;
 }
 
 async function deleteExerciseSet(setId: number, exerciseId: number): Promise<ExerciseSet | undefined> {
-    const result = await pool.query<ExerciseSet>(
+    const result = await pool.query<ExerciseSetRow>(
         'DELETE FROM exercise_sets WHERE id = $1 AND exercise_id = $2 RETURNING *',
         [setId, exerciseId]
     );
-    return result.rows[0];
+    const exerciseSetRow = result.rows[0];
+    return exerciseSetRow !== undefined ? toExerciseSet(exerciseSetRow) : undefined;
+}
+
+function toExerciseSet(row: ExerciseSetRow): ExerciseSet {
+    return {
+        ...row,
+        weight_kg: row.weight_kg === null ? null : Number(row.weight_kg),
+        rpe: row.rpe === null ? null : Number(row.rpe)
+    };
 }
 
 export { createExerciseSet, findSetsByExerciseId, updateExerciseSet, deleteExerciseSet };
