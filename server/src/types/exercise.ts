@@ -1,7 +1,7 @@
 interface Exercise {
-    id: number
-    workout_id: number
-    name: string
+    id: number;
+    workout_id: number;
+    name: string;
 }
 
 export type { Exercise }
