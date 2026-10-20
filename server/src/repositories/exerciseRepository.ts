@@ -1,6 +1,14 @@
 import { pool } from '../db.js'
 import type { Exercise } from '../types/exercise.js'
 
+async function findExerciseById(exerciseId: number, workoutId: number): Promise<Exercise | undefined> {
+    const result = await pool.query<Exercise>(
+        'SELECT * FROM exercises WHERE id = $1 AND workout_id = $2',
+        [exerciseId, workoutId]
+    );
+    return result.rows[0];
+}
+
 async function findExercisesByWorkoutId(workoutId: number): Promise<Exercise[]> {
     const result = await pool.query<Exercise>(
         'SELECT * FROM exercises WHERE workout_id = $1',
@@ -37,4 +45,4 @@ async function updateExercise(exerciseId: number, workoutId: number, name: strin
     return result.rows[0];
 }
 
-export { findExercisesByWorkoutId, createExercise, deleteExercise, updateExercise };
+export { findExerciseById, findExercisesByWorkoutId, createExercise, deleteExercise, updateExercise };

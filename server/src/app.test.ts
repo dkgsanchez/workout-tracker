@@ -4,6 +4,7 @@ import { app } from './app.js';
 import { pool } from './db.js';
 import type { Workout } from './types/workout.js';
 import type { Exercise } from './types/exercise.js';
+import { ExerciseSet } from './types/exerciseSet.js';
 
 describe('database-backed workout routes', () => {
     beforeEach(async () => {
@@ -419,6 +420,110 @@ describe('database-backed workout routes', () => {
             [exerciseId, workoutId1, 'Bench press']);
         expect(checkResult.rows).toHaveLength(1);
     });
+
+    test('GET /workouts/:workoutId/exercises/:exerciseId/sets returns sets for exercise', async () => {
+        const workoutResult = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId = workoutResult.rows[0].id;
+
+        const exerciseResult = await pool.query<Exercise>(
+            'INSERT INTO exercises (workout_id, name) VALUES ($1, $2) RETURNING *',
+            [workoutId, 'Bench press']
+        );
+        const exerciseId = exerciseResult.rows[0].id;
+
+        await pool.query(
+            'INSERT INTO exercise_sets (exercise_id, set_number, reps, weight_kg, rpe) \
+            VALUES ($1, $2, $3, $4, $5)',
+            [exerciseId, 1, 8, 82.5, 8.5]
+        );
+
+        const response = await request(app).get(`/workouts/${workoutId}/exercises/${exerciseId}/sets`)
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveLength(1);
+        expect(response.body[0]).toMatchObject({
+            exercise_id: exerciseId,
+            set_number: 1,
+            reps: 8,
+            weight_kg: 82.5,
+            rpe: 8.5
+        });
+    });
+
+    test('GET /workouts/:workoutId/exercises/:exerciseId/sets returns no sets for exercise', async () => {
+        const workoutResult = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId = workoutResult.rows[0].id;
+
+        const exerciseResult = await pool.query<Exercise>(
+            'INSERT INTO exercises (workout_id, name) VALUES ($1, $2) RETURNING *',
+            [workoutId, 'Bench press']
+        );
+        const exerciseId = exerciseResult.rows[0].id;
+
+        const response = await request(app).get(`/workouts/${workoutId}/exercises/${exerciseId}/sets`)
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveLength(0);
+        expect(response.body).toEqual([]);
+    });
+
+    test('GET /workouts/:workoutId/exercises/:exerciseId/sets returns 400 for invalid workout ID', async () => {
+        const response = await request(app).get(`/workouts/abc/exercises/999999/sets`)
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Workout ID must be a positive integer."})
+    });
+
+    test('GET /workouts/:workoutId/exercises/:exerciseId/sets returns 400 for invalid exercise ID', async () => {
+        const response = await request(app).get(`/workouts/999999/exercises/abc/sets`)
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Exercise ID must be a positive integer."})
+    });
+
+    test('GET /workouts/:workoutId/exercises/:exerciseId/sets returns 404 for non-existent workout', async () => {
+        const response = await request(app).get(`/workouts/999999/exercises/999999/sets`)
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({message: "Workout does not exist."})
+    });
+
+    test('GET /workouts/:workoutId/exercises/:exerciseId/sets returns 404 for non-existent exercise', async () => {
+        const workoutResult = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId = workoutResult.rows[0].id;
+        const response = await request(app).get(`/workouts/${workoutId}/exercises/999999/sets`)
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({message: "Exercise not found for this workout."})
+    });
+
+    test('GET /workouts/:workoutId/exercises/:exerciseId/sets returns 404 when exercise belongs to another workout', async () => {
+        const workoutResult1 = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId1 = workoutResult1.rows[0].id;
+
+        const exerciseResult = await pool.query<Exercise>(
+            'INSERT INTO exercises (workout_id, name) VALUES ($1, $2) RETURNING *',
+            [workoutId1, 'Bench press']
+        );
+        const exerciseId = exerciseResult.rows[0].id;
+
+        const workoutResult2 = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Pull day']
+        );
+        const workoutId2 = workoutResult2.rows[0].id;
+
+        const response = await request(app).get(`/workouts/${workoutId2}/exercises/${exerciseId}/sets`)
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({message: "Exercise not found for this workout."});
+    });
+
 });
 
 test('tests use test database', () => {
