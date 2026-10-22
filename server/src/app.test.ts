@@ -773,6 +773,242 @@ describe('database-backed workout routes', () => {
         expect(response.body).toEqual({message: "Exercise not found for this workout."});
     });
 
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId/sets/:setId can update one property of a set', async () => {
+        const workoutResult = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId = workoutResult.rows[0].id;
+        const exerciseResult = await pool.query<Exercise>(
+            'INSERT INTO exercises (workout_id, name) VALUES ($1, $2) RETURNING *',
+            [workoutId, 'Bench press']
+        );
+        const exerciseId = exerciseResult.rows[0].id;
+        const setResult = await pool.query<ExerciseSet>(
+            'INSERT INTO exercise_sets (exercise_id, set_number, reps, weight_kg, rpe) \
+            VALUES ($1, $2, $3, $4, $5) \
+            RETURNING *',
+            [exerciseId, 1, 8, 80, 8]
+        );
+        const setId = setResult.rows[0].id;
+        const response = await request(app)
+            .patch(`/workouts/${workoutId}/exercises/${exerciseId}/sets/${setId}`)
+            .send({reps: 10});
+        
+        expect(response.status).toBe(200);
+        expect(response.body).toMatchObject({
+            id: setId,
+            exercise_id: exerciseId, 
+            set_number: 1,
+            reps: 10,
+            weight_kg: 80,
+            rpe: 8
+        });
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId/sets/:setId can update multiple properties of a set', async () => {
+        const workoutResult = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId = workoutResult.rows[0].id;
+        const exerciseResult = await pool.query<Exercise>(
+            'INSERT INTO exercises (workout_id, name) VALUES ($1, $2) RETURNING *',
+            [workoutId, 'Bench press']
+        );
+        const exerciseId = exerciseResult.rows[0].id;
+        const setResult = await pool.query<ExerciseSet>(
+            'INSERT INTO exercise_sets (exercise_id, set_number, reps, weight_kg, rpe) \
+            VALUES ($1, $2, $3, $4, $5) \
+            RETURNING *',
+            [exerciseId, 1, 8, 80, 8]
+        );
+        const setId = setResult.rows[0].id;
+        const response = await request(app)
+            .patch(`/workouts/${workoutId}/exercises/${exerciseId}/sets/${setId}`)
+            .send({
+                setNumber: 2,
+                reps: 10,
+                weightKg: 75,
+                rpe: 9}
+            );
+        
+        expect(response.status).toBe(200);
+        expect(response.body).toMatchObject({
+            id: setId,
+            exercise_id: exerciseId, 
+            set_number: 2,
+            reps: 10,
+            weight_kg: 75,
+            rpe: 9
+        });
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId/sets/:setId can clear optional weight and RPE', async () => {
+        const workoutResult = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId = workoutResult.rows[0].id;
+        const exerciseResult = await pool.query<Exercise>(
+            'INSERT INTO exercises (workout_id, name) VALUES ($1, $2) RETURNING *',
+            [workoutId, 'Bench press']
+        );
+        const exerciseId = exerciseResult.rows[0].id;
+        const setResult = await pool.query<ExerciseSet>(
+            'INSERT INTO exercise_sets (exercise_id, set_number, reps, weight_kg, rpe) \
+            VALUES ($1, $2, $3, $4, $5) \
+            RETURNING *',
+            [exerciseId, 1, 8, 80, 8]
+        );
+        const setId = setResult.rows[0].id;
+        const response = await request(app)
+            .patch(`/workouts/${workoutId}/exercises/${exerciseId}/sets/${setId}`)
+            .send({
+                weightKg: null,
+                rpe: null
+            });
+        
+        expect(response.status).toBe(200);
+        expect(response.body).toMatchObject({
+            id: setId,
+            exercise_id: exerciseId, 
+            set_number: 1,
+            reps: 8,
+            weight_kg: null,
+            rpe: null
+        });
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId/sets/:setId returns 400 for invalid workout ID', async () => {
+        const response = await request(app).patch('/workouts/abc/exercises/999999/sets/999999').send({reps: 10});
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Workout ID must be a positive integer."});
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId/sets/:setId returns 400 for invalid exercise ID', async () => {
+        const response = await request(app).patch('/workouts/999999/exercises/abc/sets/999999').send({reps: 10});
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Exercise ID must be a positive integer."});
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId/sets/:setId returns 400 for invalid set ID', async () => {
+        const response = await request(app).patch('/workouts/999999/exercises/999999/sets/abc').send({reps: 10});
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Set ID must be a positive integer."});
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId/sets/:setId returns 400 for empty update', async () => {
+        const response = await request(app).patch('/workouts/999999/exercises/999999/sets/999999').send({});
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "No updates provided."})
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId/sets/:setId returns 400 for invalid set number', async () => {
+        let response = await request(app).patch('/workouts/999999/exercises/999999/sets/999999').send({setNumber: -1});
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Set number must be a positive integer."});
+
+        response = await request(app).patch('/workouts/999999/exercises/999999/sets/999999').send({setNumber: 1.5});
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Set number must be a positive integer."});
+
+        response = await request(app).patch('/workouts/999999/exercises/999999/sets/999999').send({setNumber: 'abc'});
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Set number must be a positive integer."});
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId/sets/:setId returns 400 for invalid reps', async () => {
+        let response = await request(app).patch('/workouts/999999/exercises/999999/sets/999999').send({reps: -1});
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Reps must be an integer 0 or greater."});
+
+        response = await request(app).patch('/workouts/999999/exercises/999999/sets/999999').send({reps: 8.5});
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Reps must be an integer 0 or greater."});
+
+        response = await request(app).patch('/workouts/999999/exercises/999999/sets/999999').send({reps: 'abc'});
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Reps must be an integer 0 or greater."});
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId/sets/:setId returns 400 for invalid weight', async () => {
+        let response = await request(app).patch('/workouts/999999/exercises/999999/sets/999999').send({weightKg: -10});
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Weight must be a number 0 or greater, or null."});
+
+        response = await request(app).patch('/workouts/999999/exercises/999999/sets/999999').send({weightKg: 'abc'});
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Weight must be a number 0 or greater, or null."});
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId/sets/:setId returns 400 for invalid RPE', async () => {
+        let response = await request(app).patch('/workouts/999999/exercises/999999/sets/999999').send({rpe: -10});
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "RPE must be a number between 1 and 10, or null."});
+
+        response = await request(app).patch('/workouts/999999/exercises/999999/sets/999999').send({rpe: 0});
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "RPE must be a number between 1 and 10, or null."});
+
+        response = await request(app).patch('/workouts/999999/exercises/999999/sets/999999').send({rpe: 11});
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "RPE must be a number between 1 and 10, or null."});
+
+        response = await request(app).patch('/workouts/999999/exercises/999999/sets/999999').send({rpe: 'abc'});
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "RPE must be a number between 1 and 10, or null."});
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId/sets/:setId returns 404 for non-existent workout', async () => {
+        const response = await request(app).patch('/workouts/999999/exercises/999999/sets/999999').send({reps: 8});
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({message: "Workout does not exist."});
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId/sets/:setId returns 404 for non-existent exercise', async () => {
+        const workoutResult = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId = workoutResult.rows[0].id;
+        const response = await request(app).patch(`/workouts/${workoutId}/exercises/999999/sets/999999`).send({reps: 8});
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({message: "Exercise not found for this workout."});
+    });
+
+    test('PATCH /workouts/:workoutId/exercises/:exerciseId/sets/:setId returns 404 when set belongs to another exercise', async () => {
+        const workoutResult = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId = workoutResult.rows[0].id;
+        const exerciseResult1 = await pool.query<Exercise>(
+            'INSERT INTO exercises (workout_id, name) VALUES ($1, $2) RETURNING *',
+            [workoutId, 'Bench press']
+        );
+        const exerciseId1 = exerciseResult1.rows[0].id;
+        const exerciseResult2 = await pool.query<Exercise>(
+            'INSERT INTO exercises (workout_id, name) VALUES ($1, $2) RETURNING *',
+            [workoutId, 'Pec fly']
+        );
+        const exerciseId2 = exerciseResult2.rows[0].id; 
+        const setResult = await pool.query<ExerciseSet>(
+            'INSERT INTO exercise_sets (exercise_id, set_number, reps, weight_kg, rpe) \
+            VALUES ($1, $2, $3, $4, $5) \
+            RETURNING *',
+            [exerciseId1, 1, 8, 80, 8]
+        );
+        const setId = setResult.rows[0].id;
+        const response = await request(app)
+            .patch(`/workouts/${workoutId}/exercises/${exerciseId2}/sets/${setId}`)
+            .send({reps: 10});
+        
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({message:"Set not found for this exercise."});
+    });
+
+
 });
 
 test('tests use test database', () => {
