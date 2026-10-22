@@ -524,6 +524,255 @@ describe('database-backed workout routes', () => {
         expect(response.body).toEqual({message: "Exercise not found for this workout."});
     });
 
+    test('POST /workouts/:workoutId/exercises/:exerciseId/sets creates a set', async () => {
+        // create workout using db
+        const workoutResult = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId = workoutResult.rows[0].id;
+        // create exercise using db
+        const exerciseResult = await pool.query<Exercise>(
+            'INSERT INTO exercises (workout_id, name) VALUES ($1, $2) RETURNING *',
+            [workoutId, 'Bench press']
+        );
+        const exerciseId = exerciseResult.rows[0].id;
+        // send http request to create set
+        const response = await request(app)
+            .post(`/workouts/${workoutId}/exercises/${exerciseId}/sets`)
+            .send({
+                setNumber: 1,
+                reps: 8,
+                weightKg: 82.5,
+                rpe: 8.5
+            });
+        // assert
+        expect(response.status).toBe(201);
+        expect(response.body).toMatchObject({
+            exercise_id: exerciseId,
+            set_number: 1,
+            reps: 8,
+            weight_kg: 82.5,
+            rpe: 8.5
+        });
+    });
+
+    test('POST /workouts/:workoutId/exercises/:exerciseId/sets allows optional weight and RPE', async () => {
+        const workoutResult = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId = workoutResult.rows[0].id;
+        const exerciseResult = await pool.query<Exercise>(
+            'INSERT INTO exercises (workout_id, name) VALUES ($1, $2) RETURNING *',
+            [workoutId, 'Push ups']
+        );
+        const exerciseId = exerciseResult.rows[0].id;
+        const response = await request(app)
+            .post(`/workouts/${workoutId}/exercises/${exerciseId}/sets`)
+            .send({
+                setNumber: 1,
+                reps: 15
+            });
+        
+        expect(response.status).toBe(201);
+        expect(response.body).toMatchObject({
+            exercise_id: exerciseId,
+            set_number: 1,
+            reps: 15,
+            weight_kg: null,
+            rpe: null
+        });
+    });
+
+    test('POST /workouts/:workoutId/exercises/:exerciseId/sets allows 0 reps', async () => {
+        const workoutResult = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['One Rep Max test']
+        );
+        const workoutId = workoutResult.rows[0].id;
+        const exerciseResult = await pool.query<Exercise>(
+            'INSERT INTO exercises (workout_id, name) VALUES ($1, $2) RETURNING *',
+            [workoutId, 'Bench press']
+        );
+        const exerciseId = exerciseResult.rows[0].id;
+        const response = await request(app)
+            .post(`/workouts/${workoutId}/exercises/${exerciseId}/sets`)
+            .send({
+                setNumber: 1,
+                reps: 0,
+                weightKg: 120,
+                rpe: 10
+            });
+        expect(response.status).toBe(201);
+        expect(response.body).toMatchObject({
+                exercise_id: exerciseId,
+                set_number: 1,
+                reps: 0,
+                weight_kg: 120,
+                rpe: 10
+        });
+    });
+
+    test('POST /workouts/:workoutId/exercises/:exerciseId/sets returns 400 for invalid workout ID', async () => {
+        const response = await request(app)
+            .post('/workouts/abc/exercises/999999/sets')
+            .send({setNumber: 1, reps: 8}
+        );
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Workout ID must be a positive integer."});
+    });
+
+    test('POST /workouts/:workoutId/exercises/:exerciseId/sets returns 400 for invalid exercise ID', async () => {
+        const response = await request(app)
+            .post('/workouts/999999/exercises/abc/sets')
+            .send({setNumber: 1, reps: 8}
+        );
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Exercise ID must be a positive integer."});
+    });
+
+    test('POST /workouts/:workoutId/exercises/:exerciseId/sets returns 400 for invalid set number', async () => {
+        let response = await request(app)
+            .post('/workouts/999999/exercises/999999/sets')
+            .send({setNumber: 0, reps: 8}
+        );
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Set number must be a positive integer."});
+
+        response = await request(app)
+            .post('/workouts/999999/exercises/999999/sets')
+            .send({setNumber: -10, reps: 8}
+        );
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Set number must be a positive integer."});
+
+        response = await request(app)
+            .post('/workouts/999999/exercises/999999/sets')
+            .send({setNumber: 1.5, reps: 8}
+        );
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Set number must be a positive integer."});
+
+        response = await request(app)
+            .post('/workouts/999999/exercises/999999/sets')
+            .send({setNumber: 'abc', reps: 8}
+        );
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Set number must be a positive integer."});
+    });
+
+    test('POST /workouts/:workoutId/exercises/:exerciseId/sets returns 400 for invalid reps', async () => {
+        let response = await request(app)
+            .post('/workouts/999999/exercises/999999/sets')
+            .send({setNumber: 1, reps: -10}
+        );
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Reps must be an integer 0 or greater."});
+
+        response = await request(app)
+            .post('/workouts/999999/exercises/999999/sets')
+            .send({setNumber: 1, reps: 8.5}
+        );
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Reps must be an integer 0 or greater."});
+
+        response = await request(app)
+            .post('/workouts/999999/exercises/999999/sets')
+            .send({setNumber: 1, reps: 'abc'}
+        );
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Reps must be an integer 0 or greater."});
+    });
+
+    test('POST /workouts/:workoutId/exercises/:exerciseId/sets returns 400 for invalid weight', async () => {
+        let response = await request(app)
+            .post('/workouts/999999/exercises/999999/sets')
+            .send({setNumber: 1, reps: 10, weightKg: -10}
+        );
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Weight must be a number 0 or greater."});
+
+        response = await request(app)
+            .post('/workouts/999999/exercises/999999/sets')
+            .send({setNumber: 1, reps: 10, weightKg: 'abc'}
+        );
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Weight must be a number 0 or greater."});
+    });
+
+    test('POST /workouts/:workoutId/exercises/:exerciseId/sets returns 400 for invalid RPE', async () => {
+        let response = await request(app)
+            .post('/workouts/999999/exercises/999999/sets')
+            .send({setNumber: 1, reps: 10, rpe: 0}
+        );
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "RPE must be a number between 1 and 10."});
+
+        response = await request(app)
+            .post('/workouts/999999/exercises/999999/sets')
+            .send({setNumber: 1, reps: 10, rpe: 11}
+        );
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "RPE must be a number between 1 and 10."});
+
+        response = await request(app)
+            .post('/workouts/999999/exercises/999999/sets')
+            .send({setNumber: 1, reps: 10, rpe: 'abc'}
+        );
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "RPE must be a number between 1 and 10."});
+    });
+
+    test('POST /workouts/:workoutId/exercises/:exerciseId/sets returns 404 for non-existent workout', async () => {
+        const response = await request(app)
+            .post('/workouts/999999/exercises/999999/sets')
+            .send({setNumber: 1, reps: 8}
+        );
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({message: "Workout does not exist."});
+    });
+
+    test('POST /workouts/:workoutId/exercises/:exerciseId/sets returns 404 for non-existent exercise', async () => {
+        const workoutResult = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId = workoutResult.rows[0].id;
+        
+        const response = await request(app)
+            .post(`/workouts/${workoutId}/exercises/999999/sets`)
+            .send({setNumber: 1, reps: 8}
+        );
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({message: "Exercise not found for this workout."});
+    });
+
+    test('POST /workouts/:workoutId/exercises/:exerciseId/sets returns 404 when exercise belongs to another workout', async () => {
+        const workoutResult1 = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId1 = workoutResult1.rows[0].id;
+        const exerciseResult = await pool.query<Exercise>(
+            'INSERT INTO exercises (workout_id, name) VALUES ($1, $2) RETURNING *',
+            [workoutId1, 'Bench press']
+        );
+        const exerciseId = exerciseResult.rows[0].id;
+        const workoutResult2 = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Pull day']
+        );
+        const workoutId2 = workoutResult2.rows[0].id;
+        
+        const response = await request(app)
+            .post(`/workouts/${workoutId2}/exercises/${exerciseId}/sets`)
+            .send({setNumber: 1, reps: 8}
+        );
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({message: "Exercise not found for this workout."});
+    });
+
 });
 
 test('tests use test database', () => {
