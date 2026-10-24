@@ -1008,6 +1008,88 @@ describe('database-backed workout routes', () => {
         expect(response.body).toEqual({message:"Set not found for this exercise."});
     });
 
+    test('DELETE /workouts/:workoutId/exercises/:exerciseId/sets/:setId deletes a set', async () => {
+        const workoutResult = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId = workoutResult.rows[0].id;
+        const exerciseResult = await pool.query<Exercise>(
+            'INSERT INTO exercises (workout_id, name) VALUES ($1, $2) RETURNING *',
+            [workoutId, 'Bench press']
+        );
+        const exerciseId = exerciseResult.rows[0].id;
+        const setResult = await pool.query<ExerciseSet>(
+            'INSERT INTO exercise_sets (exercise_id, set_number, reps) VALUES ($1, $2, $3) RETURNING *',
+            [exerciseId, 1, 10]
+        );
+        const setId = setResult.rows[0].id;
+
+        const response = await request(app).delete(`/workouts/${workoutId}/exercises/${exerciseId}/sets/${setId}`);
+        expect(response.status).toBe(204);
+
+        const checkResult = await pool.query<ExerciseSet>(
+            'SELECT * FROM exercise_sets WHERE id = $1 AND exercise_id = $2',
+            [setId, exerciseId]
+        );
+        expect(checkResult.rows.length).toBe(0);
+    });
+
+    test('DELETE /workouts/:workoutId/exercises/:exerciseId/sets/:setId returns 400 for invalid set ID', async () => {
+        const response = await request(app).delete('/workouts/999999/exercises/999999/sets/abc');
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({message: "Set ID must be a positive integer."});
+    });
+
+    test('DELETE /workouts/:workoutId/exercises/:exerciseId/sets/:setId returns 404 for non-existent set', async () => {
+        const workoutResult = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId = workoutResult.rows[0].id;
+        const exerciseResult = await pool.query<Exercise>(
+            'INSERT INTO exercises (workout_id, name) VALUES ($1, $2) RETURNING *',
+            [workoutId, 'Bench press']
+        );
+        const exerciseId = exerciseResult.rows[0].id;
+        
+        const response = await request(app).delete(`/workouts/${workoutId}/exercises/${exerciseId}/sets/999999`);
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({message: "Set not found for this exercise."});
+    });
+
+    test('DELETE /workouts/:workoutId/exercises/:exerciseId/sets/:setId returns 404 when set belongs to another exercise', async () => {
+        const workoutResult = await pool.query<Workout>(
+            'INSERT INTO workouts (name) VALUES ($1) RETURNING *',
+            ['Push day']
+        );
+        const workoutId = workoutResult.rows[0].id;
+        const exerciseResult1 = await pool.query<Exercise>(
+            'INSERT INTO exercises (workout_id, name) VALUES ($1, $2) RETURNING *',
+            [workoutId, 'Bench press']
+        );
+        const exerciseId1 = exerciseResult1.rows[0].id;
+        const exerciseResult2 = await pool.query<Exercise>(
+            'INSERT INTO exercises (workout_id, name) VALUES ($1, $2) RETURNING *',
+            [workoutId, 'Incline dumbbell press']
+        );
+        const exerciseId2 = exerciseResult2.rows[0].id;
+        const setResult = await pool.query<ExerciseSet>(
+            'INSERT INTO exercise_sets (exercise_id, set_number, reps) VALUES ($1, $2, $3) RETURNING *',
+            [exerciseId1, 1, 10]
+        );
+        const setId = setResult.rows[0].id;
+        
+        const response = await request(app).delete(`/workouts/${workoutId}/exercises/${exerciseId2}/sets/${setId}`);
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({message: "Set not found for this exercise."});
+
+        const checkResult = await pool.query<ExerciseSet>(
+            'SELECT * FROM exercise_sets WHERE id = $1 AND exercise_id = $2',
+            [setId, exerciseId1]
+        );
+        expect(checkResult.rows.length).toBe(1);
+    });
 
 });
 

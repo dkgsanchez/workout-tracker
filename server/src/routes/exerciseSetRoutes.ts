@@ -1,7 +1,7 @@
 import express from 'express';
 import { findWorkoutById } from '../repositories/workoutRepository.js';
 import { findExerciseById } from '../repositories/exerciseRepository.js';
-import { createExerciseSet, findSetsByExerciseId, updateExerciseSet } from '../repositories/exerciseSetRepository.js';
+import { createExerciseSet, deleteExerciseSet, findSetsByExerciseId, updateExerciseSet } from '../repositories/exerciseSetRepository.js';
 import type { ExerciseSetUpdates } from '../types/exerciseSet.js';
 
 const router = express.Router();
@@ -116,13 +116,49 @@ router.patch('/:workoutId/exercises/:exerciseId/sets/:setId', async (req, res) =
         }
         const set = await updateExerciseSet(setId, exerciseId, updates);
         if (set === undefined) {
-            return res.status(404).json({message: "Set not found for this exercise."})
+            return res.status(404).json({message: "Set not found for this exercise."});
         }
         return res.json(set); 
     } catch (error) {
         console.error(error);
         return res.status(500).json({message:"Internal server error."});
     }
-})
+});
+
+router.delete('/:workoutId/exercises/:exerciseId/sets/:setId', async (req, res) => {
+    const workoutId = Number(req.params.workoutId);
+    const exerciseId = Number(req.params.exerciseId);
+    const setId = Number(req.params.setId);
+
+    if (!Number.isInteger(workoutId) || workoutId < 1) {
+        return res.status(400).json({ message: "Workout ID must be a positive integer."});
+    }
+    if (!Number.isInteger(exerciseId) || exerciseId < 1) {
+        return res.status(400).json({ message: "Exercise ID must be a positive integer."});
+    }
+    if (!Number.isInteger(setId) || setId < 1) {
+        return res.status(400).json({ message: "Set ID must be a positive integer."});
+    }
+
+    try {
+        const workout = await findWorkoutById(workoutId);
+        if (workout === undefined) {
+            return res.status(404).json({message: "Workout does not exist."});
+        }
+        const exercise = await findExerciseById(exerciseId, workoutId);
+        if (exercise === undefined) {
+            return res.status(404).json({message: "Exercise not found for this workout."});
+        }
+        const set = await deleteExerciseSet(setId, exerciseId);
+        if (set === undefined) {
+            return res.status(404).json({message: "Set not found for this exercise."});
+        }
+        return res.status(204).send(); 
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({message:"Internal server error."});
+    }
+});
 
 export { router };
