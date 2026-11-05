@@ -1,6 +1,8 @@
 import express from 'express';
 import { findWorkoutById, findAllWorkouts, createWorkout, updateWorkout, deleteWorkout } from '../repositories/workoutRepository.js';
-import type { WorkoutUpdates } from '../types/workout.js';
+import type { WorkoutDetails, WorkoutUpdates } from '../types/workout.js';
+import { findExercisesByWorkoutId } from '../repositories/exerciseRepository.js';
+import { findSetsByExerciseId } from '../repositories/exerciseSetRepository.js';
 
 const router = express.Router();
 
@@ -27,6 +29,32 @@ router.get('/:id', async (req, res) => {
         }
 
         return res.json(workout);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({message: "Internal server error."});
+    }
+});
+
+router.get('/:id/details', async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) {
+        return res.status(400).json({message: "ID must be a positive integer."});
+    }
+
+    try {
+        const workout = await findWorkoutById(id);
+        if (workout === undefined) {
+            return res.status(404).json({message: "Workout does not exist."});
+        }
+        const exercises = await findExercisesByWorkoutId(id);
+        const exercisesWithSets = await Promise.all(
+            exercises.map(async (exercise) => {
+                const sets = await findSetsByExerciseId(exercise.id);
+                return { ...exercise, sets };
+            })
+        );
+        const workoutDetails: WorkoutDetails = {...workout, exercises: exercisesWithSets };
+        return res.json(workoutDetails);
     } catch (error) {
         console.error(error);
         return res.status(500).json({message: "Internal server error."});

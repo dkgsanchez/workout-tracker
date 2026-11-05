@@ -1,3 +1,6 @@
+import type { Exercise } from './exercise.js';
+import type { ExerciseSet } from './exerciseSet.js';
+
 interface Workout {
     id: number;
     name: string;
@@ -10,4 +13,12 @@ interface WorkoutUpdates {
     completed?: boolean;
 }
 
-export type { Workout, WorkoutUpdates };
+interface ExerciseWithSets extends Exercise {
+    sets: ExerciseSet[];
+}
+
+interface WorkoutDetails extends Workout {
+    exercises: ExerciseWithSets[];
+}
+
+export type { Workout, WorkoutUpdates, ExerciseWithSets, WorkoutDetails };
