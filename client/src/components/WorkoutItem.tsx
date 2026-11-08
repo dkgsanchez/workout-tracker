@@ -4,9 +4,10 @@ type WorkoutItemProps = {
   workout: Workout
   onDelete: (id: number) => void
   onToggle: (id: number) => void
+  onSelect: (id: number) => void
 }
 
-function WorkoutItem({ workout, onDelete, onToggle }: WorkoutItemProps) {
+function WorkoutItem({ workout, onDelete, onToggle, onSelect }: WorkoutItemProps) {
   return (
     <div className='workout'>
       <p className='workout-name'>
@@ -21,6 +22,9 @@ function WorkoutItem({ workout, onDelete, onToggle }: WorkoutItemProps) {
         </button>
         <button className='toggle-button' onClick={() => onToggle(workout.id)}>
           Toggle workout
+        </button>
+        <button className='select-button' onClick={() => onSelect(workout.id)}>
+          View workout
         </button>
       </div>
     </div>

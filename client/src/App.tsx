@@ -1,13 +1,14 @@
 import { useEffect, useState, type ChangeEvent, type SubmitEvent } from 'react'
-import type { Workout } from './types/workout'
+import type { Workout, WorkoutDetails } from './types/workout'
 import WorkoutItem from './components/WorkoutItem'
 import WorkoutForm from './components/WorkoutForm'
-import { createWorkout, deleteWorkout, getWorkouts, updateWorkout } from './api/workoutApi'
+import { createWorkout, deleteWorkout, getWorkouts, getWorkoutDetails, updateWorkout } from './api/workoutApi'
 import './App.css'
 
 function App() {
   const [workoutName, setWorkoutName] = useState('')
   const [workouts, setWorkouts] = useState<Workout[]>([])
+  const [selectedWorkout, setSelectedWorkout] = useState<WorkoutDetails | null>(null)
   const [error, setError] = useState('')
   const [loadingError, setLoadingError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -62,6 +63,18 @@ function App() {
     }
   }
 
+  async function handleSelectWorkout(id: number) {
+    setError('')
+
+    try {
+      const workoutDetails = await getWorkoutDetails(id)
+      setSelectedWorkout(workoutDetails)
+    } catch (error) {
+      console.error(error)
+      setError('Failed to load workout details')
+    }
+  }
+
   useEffect(() => {
     async function loadWorkouts() {
       try {
@@ -90,8 +103,14 @@ function App() {
         <p>No workouts yet.</p>
       ) : (
         workouts.map((workout) => (
-          <WorkoutItem key={workout.id} workout={workout} onDelete={handleDeleteWorkout} onToggle={handleToggleWorkout}/>
+          <WorkoutItem key={workout.id} workout={workout} onDelete={handleDeleteWorkout} onToggle={handleToggleWorkout} onSelect={handleSelectWorkout}/>
         ))
+      )}
+      {selectedWorkout && (
+        <div className='workout-details'>
+          <h2>{selectedWorkout.name}</h2>
+          <p>Exercises: {selectedWorkout.exercises.length}</p>
+        </div>
       )}
       <WorkoutForm workoutName={workoutName} onWorkoutNameChange={handleWorkoutNameChange} onSubmit={handleAddWorkout}/>
     </div>

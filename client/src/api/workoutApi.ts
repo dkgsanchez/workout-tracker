@@ -1,4 +1,4 @@
-import type { Workout } from '../types/workout'
+import type { Workout, WorkoutDetails } from '../types/workout'
 
 const API_URL = 'http://localhost:3000/workouts'
 
@@ -9,6 +9,15 @@ export async function getWorkouts(): Promise<Workout[]> {
     }
     const workouts: Workout[] = await response.json()
     return workouts
+}
+
+export async function getWorkoutDetails(id: number): Promise<WorkoutDetails> {
+    const response = await fetch(`${API_URL}/${id}/details`)
+    if (!response.ok) {
+        throw new Error(`Failed to load workout details: ${response.status}`)
+    }
+    const workoutDetails: WorkoutDetails = await response.json()
+    return workoutDetails
 }
 
 export async function createWorkout(name: string): Promise<Workout> {
