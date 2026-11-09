@@ -1,4 +1,4 @@
-import type { Workout, WorkoutDetails } from '../types/workout'
+import type { Exercise, ExerciseWithSets, Workout, WorkoutDetails } from '../types/workout'
 
 const API_URL = 'http://localhost:3000/workouts'
 
@@ -61,5 +61,25 @@ export async function deleteWorkout(id: number): Promise<void> {
     })
     if (!response.ok) {
         throw new Error(`Failed to delete workout: ${response.status}`)
+    }
+}
+
+export async function createExercise(workoutId: number, name: string): Promise<ExerciseWithSets> {
+    const response = await fetch(`${API_URL}/${workoutId}/exercises`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            name
+        })
+    })
+    if (!response.ok) {
+        throw new Error(`Failed to create exercise: ${response.status}`)
+    }
+    const exercise: Exercise = await response.json()
+    return {
+        ...exercise,
+        sets: []
     }
 }

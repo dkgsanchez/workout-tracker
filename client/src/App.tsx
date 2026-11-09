@@ -2,7 +2,7 @@ import { useEffect, useState, type ChangeEvent, type SubmitEvent } from 'react'
 import type { Workout, WorkoutDetails } from './types/workout'
 import WorkoutItem from './components/WorkoutItem'
 import WorkoutForm from './components/WorkoutForm'
-import { createWorkout, deleteWorkout, getWorkouts, getWorkoutDetails, updateWorkout } from './api/workoutApi'
+import { createWorkout, deleteWorkout, getWorkouts, getWorkoutDetails, updateWorkout, createExercise } from './api/workoutApi'
 import './App.css'
 
 function App() {
@@ -12,6 +12,7 @@ function App() {
   const [error, setError] = useState('')
   const [loadingError, setLoadingError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [exerciseName, setExerciseName] = useState('')
 
   function handleWorkoutNameChange(event: ChangeEvent<HTMLInputElement>) {
     setWorkoutName(event.target.value)
@@ -75,6 +76,32 @@ function App() {
     }
   }
 
+  function handleExerciseNameChange(event: ChangeEvent<HTMLInputElement>) {
+    setExerciseName(event.target.value)
+  }
+
+  async function handleAddExercise(event: SubmitEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (exerciseName.trim() === '' || selectedWorkout === null) {
+      return
+    }
+    setError('')
+    try {
+      const exercise = await createExercise(
+        selectedWorkout.id, 
+        exerciseName.trim()
+      )
+      setSelectedWorkout({
+        ...selectedWorkout,
+        exercises: [...selectedWorkout.exercises, exercise]
+      })
+      setExerciseName('')
+    } catch (error) {
+      console.error(error)
+      setError('Failed to add exercise')
+    }
+  }
+
   useEffect(() => {
     async function loadWorkouts() {
       try {
@@ -130,6 +157,15 @@ function App() {
             ))
           )
         }
+        <form onSubmit={handleAddExercise}>
+          <input 
+            type='text' 
+            value={exerciseName} 
+            onChange={handleExerciseNameChange} 
+            placeholder='Exercise name'
+          />
+          <button type='submit'>Add exercise</button>
+        </form>
         </div>
       )}
       <WorkoutForm workoutName={workoutName} onWorkoutNameChange={handleWorkoutNameChange} onSubmit={handleAddWorkout}/>

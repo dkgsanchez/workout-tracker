@@ -13,10 +13,13 @@ export interface ExerciseSet {
   rpe: number | null;
 }
 
-export interface ExerciseWithSets { 
+export interface Exercise {
   id: number;
   workout_id: number;
   name: string;
+}
+
+export interface ExerciseWithSets extends Exercise { 
   sets: ExerciseSet[];
 }
 
