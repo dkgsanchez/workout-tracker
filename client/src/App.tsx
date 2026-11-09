@@ -109,7 +109,27 @@ function App() {
       {selectedWorkout && (
         <div className='workout-details'>
           <h2>{selectedWorkout.name}</h2>
-          <p>Exercises: {selectedWorkout.exercises.length}</p>
+          {selectedWorkout.exercises.length === 0 ? (
+            <p>No exercises.</p>
+          ) : (
+            selectedWorkout.exercises.map((exercise) => (
+              <div key={exercise.id}>
+                <h3>{exercise.name}</h3>
+                {exercise.sets.length === 0 ? (
+                  <p>No sets.</p>
+                ) : (
+                  exercise.sets.map((set) => (
+                    <p key={set.id}>
+                      Set {set.set_number}: {set.reps} reps
+                      {set.weight_kg !== null && ` x ${set.weight_kg}kg`}
+                      {set.rpe !== null && ` @ RPE ${set.rpe}`}
+                    </p>
+                  ))
+                )}
+              </div>
+            ))
+          )
+        }
         </div>
       )}
       <WorkoutForm workoutName={workoutName} onWorkoutNameChange={handleWorkoutNameChange} onSubmit={handleAddWorkout}/>
