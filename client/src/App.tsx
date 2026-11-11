@@ -1,14 +1,15 @@
 import { useEffect, useState, type ChangeEvent, type SubmitEvent } from 'react'
-import type { Workout, WorkoutDetails } from './types/workout'
+import type { Workout, WorkoutDetails as WorkoutDetailsType } from './types/workout'
 import WorkoutItem from './components/WorkoutItem'
 import WorkoutForm from './components/WorkoutForm'
 import { createWorkout, deleteWorkout, getWorkouts, getWorkoutDetails, updateWorkout, createExercise, deleteExercise } from './api/workoutApi'
 import './App.css'
+import WorkoutDetails from './components/WorkoutDetails'
 
 function App() {
   const [workoutName, setWorkoutName] = useState('')
   const [workouts, setWorkouts] = useState<Workout[]>([])
-  const [selectedWorkout, setSelectedWorkout] = useState<WorkoutDetails | null>(null)
+  const [selectedWorkout, setSelectedWorkout] = useState<WorkoutDetailsType | null>(null)
   const [error, setError] = useState('')
   const [loadingError, setLoadingError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -53,10 +54,10 @@ function App() {
     setError('')
     try {
       const updatedWorkout = await updateWorkout(workout.id, !workout.completed)
-      setWorkouts(workouts.map((workout) => 
-        workout.id === updatedWorkout.id 
-        ? updatedWorkout 
-        : workout
+      setWorkouts(workouts.map((workout) =>
+        workout.id === updatedWorkout.id
+          ? updatedWorkout
+          : workout
       ))
     } catch (error) {
       console.error(error)
@@ -89,7 +90,7 @@ function App() {
 
     try {
       const exercise = await createExercise(
-        selectedWorkout.id, 
+        selectedWorkout.id,
         exerciseName.trim()
       )
       setSelectedWorkout({
@@ -149,48 +150,18 @@ function App() {
         <p>No workouts yet.</p>
       ) : (
         workouts.map((workout) => (
-          <WorkoutItem key={workout.id} workout={workout} onDelete={handleDeleteWorkout} onToggle={handleToggleWorkout} onSelect={handleSelectWorkout}/>
+          <WorkoutItem key={workout.id} workout={workout} onDelete={handleDeleteWorkout} onToggle={handleToggleWorkout} onSelect={handleSelectWorkout} />
         ))
       )}
-      {selectedWorkout && (
-        <div className='workout-details'>
-          <h2>{selectedWorkout.name}</h2>
-          {selectedWorkout.exercises.length === 0 ? (
-            <p>No exercises.</p>
-          ) : (
-            selectedWorkout.exercises.map((exercise) => (
-              <div key={exercise.id}>
-                <h3>{exercise.name}</h3>
-                <button onClick={() => handleDeleteExercise(exercise.id)}>
-                  Delete exercise
-                </button>
-                {exercise.sets.length === 0 ? (
-                  <p>No sets.</p>
-                ) : (
-                  exercise.sets.map((set) => (
-                    <p key={set.id}>
-                      Set {set.set_number}: {set.reps} reps
-                      {set.weight_kg !== null && ` x ${set.weight_kg}kg`}
-                      {set.rpe !== null && ` @ RPE ${set.rpe}`}
-                    </p>
-                  ))
-                )}
-              </div>
-            ))
-          )
-        }
-        <form onSubmit={handleAddExercise}>
-          <input 
-            type='text' 
-            value={exerciseName} 
-            onChange={handleExerciseNameChange} 
-            placeholder='Exercise name'
-          />
-          <button type='submit'>Add exercise</button>
-        </form>
-        </div>
-      )}
-      <WorkoutForm workoutName={workoutName} onWorkoutNameChange={handleWorkoutNameChange} onSubmit={handleAddWorkout}/>
+      {selectedWorkout &&
+        <WorkoutDetails
+          workout={selectedWorkout}
+          exerciseName={exerciseName}
+          onExerciseNameChange={handleExerciseNameChange}
+          onAddExercise={handleAddExercise}
+          onDeleteExercise={handleDeleteExercise} />
+      }
+      <WorkoutForm workoutName={workoutName} onWorkoutNameChange={handleWorkoutNameChange} onSubmit={handleAddWorkout} />
     </div>
   )
 }
