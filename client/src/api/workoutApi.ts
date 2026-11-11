@@ -83,3 +83,12 @@ export async function createExercise(workoutId: number, name: string): Promise<E
         sets: []
     }
 }
+
+export async function deleteExercise(workoutId: number, exerciseId: number): Promise<void> {
+    const response = await fetch(`${API_URL}/${workoutId}/exercises/${exerciseId}`, {
+        method: 'DELETE'
+    });
+    if (!response.ok) {
+        throw new Error(`Failed to delete exercise: ${response.status}`)
+    }
+}

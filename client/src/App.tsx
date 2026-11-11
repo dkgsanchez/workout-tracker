@@ -2,7 +2,7 @@ import { useEffect, useState, type ChangeEvent, type SubmitEvent } from 'react'
 import type { Workout, WorkoutDetails } from './types/workout'
 import WorkoutItem from './components/WorkoutItem'
 import WorkoutForm from './components/WorkoutForm'
-import { createWorkout, deleteWorkout, getWorkouts, getWorkoutDetails, updateWorkout, createExercise } from './api/workoutApi'
+import { createWorkout, deleteWorkout, getWorkouts, getWorkoutDetails, updateWorkout, createExercise, deleteExercise } from './api/workoutApi'
 import './App.css'
 
 function App() {
@@ -86,6 +86,7 @@ function App() {
       return
     }
     setError('')
+
     try {
       const exercise = await createExercise(
         selectedWorkout.id, 
@@ -99,6 +100,24 @@ function App() {
     } catch (error) {
       console.error(error)
       setError('Failed to add exercise')
+    }
+  }
+
+  async function handleDeleteExercise(exerciseId: number) {
+    if (selectedWorkout === null) {
+      return
+    }
+    setError('')
+
+    try {
+      await deleteExercise(selectedWorkout.id, exerciseId)
+      setSelectedWorkout({
+        ...selectedWorkout,
+        exercises: selectedWorkout.exercises.filter(exercise => exercise.id !== exerciseId)
+      })
+    } catch (error) {
+      console.error(error)
+      setError('Failed to delete exercise')
     }
   }
 
@@ -142,6 +161,9 @@ function App() {
             selectedWorkout.exercises.map((exercise) => (
               <div key={exercise.id}>
                 <h3>{exercise.name}</h3>
+                <button onClick={() => handleDeleteExercise(exercise.id)}>
+                  Delete exercise
+                </button>
                 {exercise.sets.length === 0 ? (
                   <p>No sets.</p>
                 ) : (
