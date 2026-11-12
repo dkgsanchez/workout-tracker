@@ -92,3 +92,20 @@ export async function deleteExercise(workoutId: number, exerciseId: number): Pro
         throw new Error(`Failed to delete exercise: ${response.status}`)
     }
 }
+
+export async function updateExercise(workoutId: number, exerciseId: number, name: string): Promise<Exercise> {
+    const response = await fetch(`${API_URL}/${workoutId}/exercises/${exerciseId}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            name
+        })
+    });
+    if (!response.ok) {
+        throw new Error(`Failed to update exercise: ${response.status}`)
+    }
+    const updatedExercise: Exercise = await response.json()
+    return updatedExercise;
+}

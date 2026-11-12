@@ -8,6 +8,7 @@ type WorkoutDetailsProps = {
     onExerciseNameChange: (event: ChangeEvent<HTMLInputElement>) => void
     onAddExercise: (event: SubmitEvent<HTMLFormElement>) => void
     onDeleteExercise: (exerciseId: number) => void
+    onUpdateExercise: (exerciseId: number, name: string) => void
 }
 
 function WorkoutDetails({
@@ -15,7 +16,8 @@ function WorkoutDetails({
     exerciseName,
     onExerciseNameChange,
     onAddExercise,
-    onDeleteExercise
+    onDeleteExercise,
+    onUpdateExercise
 }: WorkoutDetailsProps) {
     return (
         <div className='workout-details'>
@@ -28,6 +30,7 @@ function WorkoutDetails({
                     key={exercise.id} 
                     exercise={exercise} 
                     onDelete={onDeleteExercise}
+                    onUpdate={onUpdateExercise}
                     />
                 ))
             )}

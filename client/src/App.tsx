@@ -2,7 +2,7 @@ import { useEffect, useState, type ChangeEvent, type SubmitEvent } from 'react'
 import type { Workout, WorkoutDetails as WorkoutDetailsType } from './types/workout'
 import WorkoutItem from './components/WorkoutItem'
 import WorkoutForm from './components/WorkoutForm'
-import { createWorkout, deleteWorkout, getWorkouts, getWorkoutDetails, updateWorkout, createExercise, deleteExercise } from './api/workoutApi'
+import { createWorkout, deleteWorkout, getWorkouts, getWorkoutDetails, updateWorkout, createExercise, deleteExercise, updateExercise } from './api/workoutApi'
 import './App.css'
 import WorkoutDetails from './components/WorkoutDetails'
 
@@ -122,6 +122,26 @@ function App() {
     }
   }
 
+  async function handleUpdateExercise(exerciseId: number, name: string) {
+    if (selectedWorkout === null || name.trim() === '') {
+      return
+    }
+    setError('')
+
+    try {
+      const updatedExercise = await updateExercise(selectedWorkout.id, exerciseId, name.trim())
+      setSelectedWorkout({
+        ...selectedWorkout,
+        exercises: selectedWorkout.exercises.map(exercise => (
+          exercise.id !== exerciseId ? exercise : {...exercise, ...updatedExercise}
+        ))
+      })
+    } catch (error) {
+      console.error(error)
+      setError('Failed to update exercise')
+    }
+  }
+
   useEffect(() => {
     async function loadWorkouts() {
       try {
@@ -159,7 +179,8 @@ function App() {
           exerciseName={exerciseName}
           onExerciseNameChange={handleExerciseNameChange}
           onAddExercise={handleAddExercise}
-          onDeleteExercise={handleDeleteExercise} />
+          onDeleteExercise={handleDeleteExercise}
+          onUpdateExercise={handleUpdateExercise} />
       }
       <WorkoutForm workoutName={workoutName} onWorkoutNameChange={handleWorkoutNameChange} onSubmit={handleAddWorkout} />
     </div>
