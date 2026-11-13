@@ -2,7 +2,7 @@ import { useEffect, useState, type ChangeEvent, type SubmitEvent } from 'react'
 import type { Workout, WorkoutDetails as WorkoutDetailsType } from './types/workout'
 import WorkoutItem from './components/WorkoutItem'
 import WorkoutForm from './components/WorkoutForm'
-import { createWorkout, deleteWorkout, getWorkouts, getWorkoutDetails, updateWorkout, createExercise, deleteExercise, updateExercise } from './api/workoutApi'
+import { createWorkout, deleteWorkout, getWorkouts, getWorkoutDetails, updateWorkout, createExercise, deleteExercise, updateExercise, createExerciseSet } from './api/workoutApi'
 import './App.css'
 import WorkoutDetails from './components/WorkoutDetails'
 
@@ -142,6 +142,39 @@ function App() {
     }
   }
 
+  async function handleAddSet(
+    exerciseId: number,
+    setNumber: number,
+    reps: number,
+    weightKg?: number,
+    rpe?: number
+  ) {
+    if (selectedWorkout === null) {
+      return
+    }
+    setError('')
+    
+    try {
+      const exerciseSet = await createExerciseSet(
+        selectedWorkout.id, 
+        exerciseId, 
+        setNumber, 
+        reps, 
+        weightKg, 
+        rpe
+      )
+      setSelectedWorkout({
+        ...selectedWorkout,
+        exercises: selectedWorkout.exercises.map(exercise => (
+          exercise.id !== exerciseId ? exercise : {...exercise, sets: [...exercise.sets, exerciseSet]}
+        ))
+      })
+    } catch (error) {
+      console.error(error)
+      setError('Failed to add set')
+    }
+  }
+
   useEffect(() => {
     async function loadWorkouts() {
       try {
@@ -180,7 +213,8 @@ function App() {
           onExerciseNameChange={handleExerciseNameChange}
           onAddExercise={handleAddExercise}
           onDeleteExercise={handleDeleteExercise}
-          onUpdateExercise={handleUpdateExercise} />
+          onUpdateExercise={handleUpdateExercise}
+          onAddSet={handleAddSet} />
       }
       <WorkoutForm workoutName={workoutName} onWorkoutNameChange={handleWorkoutNameChange} onSubmit={handleAddWorkout} />
     </div>
