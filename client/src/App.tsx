@@ -1,8 +1,8 @@
 import { useEffect, useState, type ChangeEvent, type SubmitEvent } from 'react'
-import type { Workout, WorkoutDetails as WorkoutDetailsType } from './types/workout'
+import type { Workout, WorkoutDetails as WorkoutDetailsType, ExerciseSetUpdates } from './types/workout'
 import WorkoutItem from './components/WorkoutItem'
 import WorkoutForm from './components/WorkoutForm'
-import { createWorkout, deleteWorkout, getWorkouts, getWorkoutDetails, updateWorkout, createExercise, deleteExercise, updateExercise, createExerciseSet } from './api/workoutApi'
+import { createWorkout, deleteWorkout, getWorkouts, getWorkoutDetails, updateWorkout, createExercise, deleteExercise, updateExercise, createExerciseSet, updateExerciseSet } from './api/workoutApi'
 import './App.css'
 import WorkoutDetails from './components/WorkoutDetails'
 
@@ -133,7 +133,7 @@ function App() {
       setSelectedWorkout({
         ...selectedWorkout,
         exercises: selectedWorkout.exercises.map(exercise => (
-          exercise.id !== exerciseId ? exercise : {...exercise, ...updatedExercise}
+          exercise.id !== exerciseId ? exercise : { ...exercise, ...updatedExercise }
         ))
       })
     } catch (error) {
@@ -153,25 +153,57 @@ function App() {
       return
     }
     setError('')
-    
+
     try {
       const exerciseSet = await createExerciseSet(
-        selectedWorkout.id, 
-        exerciseId, 
-        setNumber, 
-        reps, 
-        weightKg, 
+        selectedWorkout.id,
+        exerciseId,
+        setNumber,
+        reps,
+        weightKg,
         rpe
       )
       setSelectedWorkout({
         ...selectedWorkout,
         exercises: selectedWorkout.exercises.map(exercise => (
-          exercise.id !== exerciseId ? exercise : {...exercise, sets: [...exercise.sets, exerciseSet]}
+          exercise.id !== exerciseId ? exercise : { ...exercise, sets: [...exercise.sets, exerciseSet] }
         ))
       })
     } catch (error) {
       console.error(error)
       setError('Failed to add set')
+    }
+  }
+
+  async function handleUpdateSet(
+    exerciseId: number,
+    setId: number,
+    updates: ExerciseSetUpdates
+  ) {
+    if (selectedWorkout === null) {
+      return
+    }
+    setError('')
+
+    try {
+      const updatedSet = await updateExerciseSet(selectedWorkout.id, exerciseId, setId, updates)
+      setSelectedWorkout({
+        ...selectedWorkout,
+        exercises: selectedWorkout.exercises.map(exercise => (
+          exercise.id !== exerciseId
+            ? exercise
+            : {
+              ...exercise,
+              sets: exercise.sets.map(set =>
+                set.id !== setId
+                  ? set
+                  : updatedSet)
+            }
+        ))
+      })
+    } catch (error) {
+      console.error(error)
+      setError('Failed to update set')
     }
   }
 
@@ -214,7 +246,8 @@ function App() {
           onAddExercise={handleAddExercise}
           onDeleteExercise={handleDeleteExercise}
           onUpdateExercise={handleUpdateExercise}
-          onAddSet={handleAddSet} />
+          onAddSet={handleAddSet}
+          onUpdateSet={handleUpdateSet} />
       }
       <WorkoutForm workoutName={workoutName} onWorkoutNameChange={handleWorkoutNameChange} onSubmit={handleAddWorkout} />
     </div>

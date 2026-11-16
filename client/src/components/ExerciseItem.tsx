@@ -1,5 +1,6 @@
-import type { ExerciseWithSets } from '../types/workout'
+import type { ExerciseWithSets, ExerciseSetUpdates } from '../types/workout'
 import { useState, type ChangeEvent, type SubmitEvent } from 'react'
+import ExerciseSetItem from './ExerciseSetItem'
 
 type ExerciseItemProps = {
     exercise: ExerciseWithSets
@@ -12,9 +13,14 @@ type ExerciseItemProps = {
         weightKg?: number,
         rpe?: number
     ) => void
+    onUpdateSet: (
+        exerciseId: number,
+        setId: number,
+        updates: ExerciseSetUpdates
+    ) => void
 }
 
-function ExerciseItem({ exercise, onDelete, onUpdate, onAddSet }: ExerciseItemProps) {
+function ExerciseItem({ exercise, onDelete, onUpdate, onAddSet, onUpdateSet }: ExerciseItemProps) {
     const [isEditing, setIsEditing] = useState(false)
     const [editedName, setEditedName] = useState(exercise.name)
     const [setNumber, setSetNumber] = useState('')
@@ -146,11 +152,10 @@ function ExerciseItem({ exercise, onDelete, onUpdate, onAddSet }: ExerciseItemPr
                 <p>No sets.</p>
             ) : (
                 exercise.sets.map((set) => (
-                    <p key={set.id}>
-                        Set {set.set_number}: {set.reps} reps
-                        {set.weight_kg !== null && ` x ${set.weight_kg}kg`}
-                        {set.rpe !== null && ` @ RPE ${set.rpe}`}
-                    </p>
+                    <ExerciseSetItem
+                    exerciseId={exercise.id}
+                    exerciseSet={set}
+                    onUpdate={onUpdateSet}/>
                 ))
             )}
         </div>

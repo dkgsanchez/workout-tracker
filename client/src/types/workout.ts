@@ -13,6 +13,13 @@ export interface ExerciseSet {
   rpe: number | null;
 }
 
+export interface ExerciseSetUpdates {
+    setNumber?: number
+    reps?: number
+    weightKg?: number | null
+    rpe?: number | null
+}
+
 export interface Exercise {
   id: number;
   workout_id: number;

@@ -1,4 +1,4 @@
-import type { WorkoutDetails as WorkoutDetailsType} from '../types/workout'
+import type { WorkoutDetails as WorkoutDetailsType, ExerciseSetUpdates} from '../types/workout'
 import type { ChangeEvent, SubmitEvent } from 'react'
 import ExerciseItem from './ExerciseItem'
 
@@ -16,6 +16,11 @@ type WorkoutDetailsProps = {
         weightKg?: number,
         rpe?: number
     ) => void
+    onUpdateSet: (
+        exerciseId: number,
+        setId: number,
+        updates: ExerciseSetUpdates
+      ) => void
 }
 
 function WorkoutDetails({
@@ -25,7 +30,8 @@ function WorkoutDetails({
     onAddExercise,
     onDeleteExercise,
     onUpdateExercise,
-    onAddSet
+    onAddSet,
+    onUpdateSet
 }: WorkoutDetailsProps) {
     return (
         <div className='workout-details'>
@@ -40,6 +46,7 @@ function WorkoutDetails({
                     onDelete={onDeleteExercise}
                     onUpdate={onUpdateExercise}
                     onAddSet={onAddSet}
+                    onUpdateSet={onUpdateSet}
                     />
                 ))
             )}

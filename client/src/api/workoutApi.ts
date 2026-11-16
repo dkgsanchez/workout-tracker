@@ -1,4 +1,4 @@
-import type { Exercise, ExerciseSet, ExerciseWithSets, Workout, WorkoutDetails } from '../types/workout'
+import type { Exercise, ExerciseSet, ExerciseWithSets, Workout, WorkoutDetails, ExerciseSetUpdates } from '../types/workout'
 
 const API_URL = 'http://localhost:3000/workouts'
 
@@ -135,4 +135,26 @@ export async function createExerciseSet(
     }
     const exerciseSet: ExerciseSet = await response.json()
     return exerciseSet
+}
+
+export async function updateExerciseSet(
+    workoutId: number,
+    exerciseId: number,
+    setId: number,
+    updates: ExerciseSetUpdates
+): Promise<ExerciseSet> {
+    const response = await fetch(`${API_URL}/${workoutId}/exercises/${exerciseId}/sets/${setId}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updates)
+    })
+
+    if (!response.ok) {
+        throw new Error(`Failed to update set: ${response.status}`)
+    }
+
+    const updatedSet: ExerciseSet = await response.json()
+    return updatedSet
 }
