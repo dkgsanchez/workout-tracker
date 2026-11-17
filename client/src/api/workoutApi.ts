@@ -158,3 +158,16 @@ export async function updateExerciseSet(
     const updatedSet: ExerciseSet = await response.json()
     return updatedSet
 }
+
+export async function deleteExerciseSet(
+    workoutId: number, 
+    exerciseId: number, 
+    setId: number
+): Promise<void> {
+    const response = await fetch(`${API_URL}/${workoutId}/exercises/${exerciseId}/sets/${setId}`, {
+        method: 'DELETE'
+    })
+    if (!response.ok) {
+        throw new Error(`Failed to delete set: ${response.status}`)
+    }
+}

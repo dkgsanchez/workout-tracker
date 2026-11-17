@@ -2,7 +2,7 @@ import { useEffect, useState, type ChangeEvent, type SubmitEvent } from 'react'
 import type { Workout, WorkoutDetails as WorkoutDetailsType, ExerciseSetUpdates } from './types/workout'
 import WorkoutItem from './components/WorkoutItem'
 import WorkoutForm from './components/WorkoutForm'
-import { createWorkout, deleteWorkout, getWorkouts, getWorkoutDetails, updateWorkout, createExercise, deleteExercise, updateExercise, createExerciseSet, updateExerciseSet } from './api/workoutApi'
+import { createWorkout, deleteWorkout, getWorkouts, getWorkoutDetails, updateWorkout, createExercise, deleteExercise, updateExercise, createExerciseSet, updateExerciseSet, deleteExerciseSet } from './api/workoutApi'
 import './App.css'
 import WorkoutDetails from './components/WorkoutDetails'
 
@@ -207,6 +207,31 @@ function App() {
     }
   }
 
+  async function handleDeleteSet(exerciseId: number, setId: number) {
+    if (selectedWorkout === null) {
+      return
+    }
+    setError('')
+
+    try {
+      await deleteExerciseSet(selectedWorkout.id, exerciseId, setId)
+      setSelectedWorkout({
+        ...selectedWorkout,
+        exercises: selectedWorkout.exercises.map(exercise => (
+          exercise.id !== exerciseId
+            ? exercise
+            : {
+              ...exercise,
+              sets: exercise.sets.filter(set => set.id !== setId)
+            }
+        ))
+      })
+    } catch (error) {
+      console.error(error)
+      setError('Failed to delete set')
+    }
+  }
+
   useEffect(() => {
     async function loadWorkouts() {
       try {
@@ -247,7 +272,8 @@ function App() {
           onDeleteExercise={handleDeleteExercise}
           onUpdateExercise={handleUpdateExercise}
           onAddSet={handleAddSet}
-          onUpdateSet={handleUpdateSet} />
+          onUpdateSet={handleUpdateSet}
+          onDeleteSet={handleDeleteSet} />
       }
       <WorkoutForm workoutName={workoutName} onWorkoutNameChange={handleWorkoutNameChange} onSubmit={handleAddWorkout} />
     </div>

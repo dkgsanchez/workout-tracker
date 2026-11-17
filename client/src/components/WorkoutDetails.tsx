@@ -21,6 +21,10 @@ type WorkoutDetailsProps = {
         setId: number,
         updates: ExerciseSetUpdates
       ) => void
+    onDeleteSet: (
+        exerciseId: number, 
+        setId: number
+    ) => void
 }
 
 function WorkoutDetails({
@@ -31,7 +35,8 @@ function WorkoutDetails({
     onDeleteExercise,
     onUpdateExercise,
     onAddSet,
-    onUpdateSet
+    onUpdateSet,
+    onDeleteSet
 }: WorkoutDetailsProps) {
     return (
         <div className='workout-details'>
@@ -47,6 +52,7 @@ function WorkoutDetails({
                     onUpdate={onUpdateExercise}
                     onAddSet={onAddSet}
                     onUpdateSet={onUpdateSet}
+                    onDeleteSet={onDeleteSet}
                     />
                 ))
             )}

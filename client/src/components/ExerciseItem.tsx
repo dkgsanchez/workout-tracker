@@ -18,9 +18,13 @@ type ExerciseItemProps = {
         setId: number,
         updates: ExerciseSetUpdates
     ) => void
+    onDeleteSet: (
+        exerciseId: number, 
+        setId: number
+    ) => void
 }
 
-function ExerciseItem({ exercise, onDelete, onUpdate, onAddSet, onUpdateSet }: ExerciseItemProps) {
+function ExerciseItem({ exercise, onDelete, onUpdate, onAddSet, onUpdateSet, onDeleteSet }: ExerciseItemProps) {
     const [isEditing, setIsEditing] = useState(false)
     const [editedName, setEditedName] = useState(exercise.name)
     const [setNumber, setSetNumber] = useState('')
@@ -153,9 +157,11 @@ function ExerciseItem({ exercise, onDelete, onUpdate, onAddSet, onUpdateSet }: E
             ) : (
                 exercise.sets.map((set) => (
                     <ExerciseSetItem
+                    key={set.id}
                     exerciseId={exercise.id}
                     exerciseSet={set}
-                    onUpdate={onUpdateSet}/>
+                    onUpdate={onUpdateSet}
+                    onDelete={onDeleteSet}/>
                 ))
             )}
         </div>

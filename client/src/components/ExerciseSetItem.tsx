@@ -9,9 +9,13 @@ interface ExerciseSetItemProps {
         setId: number,
         updates: ExerciseSetUpdates
     ) => void
+    onDelete: (
+        exerciseId: number, 
+        setId: number
+    ) => void
 }
 
-function ExerciseSetItem({ exerciseId, exerciseSet, onUpdate }: ExerciseSetItemProps) {
+function ExerciseSetItem({ exerciseId, exerciseSet, onUpdate, onDelete }: ExerciseSetItemProps) {
     const [isEditing, setIsEditing] = useState(false)
     const [setNumber, setSetNumber] = useState(String(exerciseSet.set_number))
     const [reps, setReps] = useState(String(exerciseSet.reps))
@@ -76,6 +80,10 @@ function ExerciseSetItem({ exerciseId, exerciseSet, onUpdate }: ExerciseSetItemP
         setIsEditing(true)
     }
 
+    function handleDelete() {
+        onDelete(exerciseId, exerciseSet.id)
+    }
+
     return (
         <div>
             {isEditing ?
@@ -123,6 +131,9 @@ function ExerciseSetItem({ exerciseId, exerciseSet, onUpdate }: ExerciseSetItemP
                     </p>
                     <button onClick={handleEdit}>
                         Edit
+                    </button>
+                    <button onClick={handleDelete}>
+                        Delete
                     </button>
                 </div>
             }
