@@ -40,6 +40,9 @@ function App() {
     try {
       await deleteWorkout(idToDelete)
       setWorkouts(workouts.filter(workout => workout.id !== idToDelete))
+      if (selectedWorkout?.id === idToDelete) {
+        setSelectedWorkout(null)
+      }
     } catch (error) {
       console.error(error)
       setError('Failed to delete workout')
