@@ -19,7 +19,7 @@ type ExerciseItemProps = {
         updates: ExerciseSetUpdates
     ) => void
     onDeleteSet: (
-        exerciseId: number, 
+        exerciseId: number,
         setId: number
     ) => void
 }
@@ -37,7 +37,9 @@ function ExerciseItem({ exercise, onDelete, onUpdate, onAddSet, onUpdateSet, onD
         setEditedName(event.target.value)
     }
 
-    function handleSave() {
+    function handleSave(event: SubmitEvent<HTMLFormElement>) {
+        event.preventDefault()
+
         if (editedName.trim() === '') {
             return
         }
@@ -91,14 +93,16 @@ function ExerciseItem({ exercise, onDelete, onUpdate, onAddSet, onUpdateSet, onD
         <div>
             {isEditing ?
                 <div>
-                    <input
-                        type='text'
-                        value={editedName}
-                        onChange={handleNameChange}
-                    />
-                    <button onClick={handleSave}>
-                        Save
-                    </button>
+                    <form onSubmit={handleSave}>
+                        <input
+                            type='text'
+                            value={editedName}
+                            onChange={handleNameChange}
+                        />
+                        <button type='submit'>
+                            Save
+                        </button>
+                    </form>
                     <button onClick={handleCancel}>
                         Cancel
                     </button>
@@ -157,11 +161,11 @@ function ExerciseItem({ exercise, onDelete, onUpdate, onAddSet, onUpdateSet, onD
             ) : (
                 exercise.sets.map((set) => (
                     <ExerciseSetItem
-                    key={set.id}
-                    exerciseId={exercise.id}
-                    exerciseSet={set}
-                    onUpdate={onUpdateSet}
-                    onDelete={onDeleteSet}/>
+                        key={set.id}
+                        exerciseId={exercise.id}
+                        exerciseSet={set}
+                        onUpdate={onUpdateSet}
+                        onDelete={onDeleteSet} />
                 ))
             )}
         </div>

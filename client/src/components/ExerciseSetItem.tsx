@@ -1,5 +1,5 @@
 import { type ExerciseSet, type ExerciseSetUpdates } from '../types/workout'
-import { useState } from 'react'
+import { useState, type SubmitEvent } from 'react'
 
 interface ExerciseSetItemProps {
     exerciseId: number
@@ -10,7 +10,7 @@ interface ExerciseSetItemProps {
         updates: ExerciseSetUpdates
     ) => void
     onDelete: (
-        exerciseId: number, 
+        exerciseId: number,
         setId: number
     ) => void
 }
@@ -22,7 +22,9 @@ function ExerciseSetItem({ exerciseId, exerciseSet, onUpdate, onDelete }: Exerci
     const [weightKg, setWeightKg] = useState(exerciseSet.weight_kg === null ? '' : String(exerciseSet.weight_kg))
     const [rpe, setRpe] = useState(exerciseSet.rpe === null ? '' : String(exerciseSet.rpe))
 
-    function handleSave() {
+    function handleSave(event: SubmitEvent<HTMLFormElement>) {
+        event.preventDefault()
+        
         if (setNumber.trim() === '' || reps.trim() === '') {
             return
         }
@@ -88,40 +90,42 @@ function ExerciseSetItem({ exerciseId, exerciseSet, onUpdate, onDelete }: Exerci
         <div>
             {isEditing ?
                 <div>
-                    <input
-                        type='number'
-                        min='1'
-                        value={setNumber}
-                        onChange={event => setSetNumber(event.target.value)}
-                    />
-                    <input
-                        type='number'
-                        min='0'
-                        value={reps}
-                        onChange={event => setReps(event.target.value)}
-                    />
-                    <input
-                        type='number'
-                        min='0'
-                        step='0.5'
-                        value={weightKg}
-                        onChange={event => setWeightKg(event.target.value)}
-                    />
-                    <input
-                        type='number'
-                        min='1'
-                        max='10'
-                        step='0.5'
-                        value={rpe}
-                        onChange={event => setRpe(event.target.value)}
-                    />
-                    <button onClick={handleSave}>
-                        Save
-                    </button>
+                    <form onSubmit={handleSave}>
+                        <input
+                            type='number'
+                            min='1'
+                            value={setNumber}
+                            onChange={event => setSetNumber(event.target.value)}
+                        />
+                        <input
+                            type='number'
+                            min='0'
+                            value={reps}
+                            onChange={event => setReps(event.target.value)}
+                        />
+                        <input
+                            type='number'
+                            min='0'
+                            step='0.5'
+                            value={weightKg}
+                            onChange={event => setWeightKg(event.target.value)}
+                        />
+                        <input
+                            type='number'
+                            min='1'
+                            max='10'
+                            step='0.5'
+                            value={rpe}
+                            onChange={event => setRpe(event.target.value)}
+                        />
+                        <button type='submit'>
+                            Save
+                        </button>
+                    </form>
                     <button onClick={handleCancel}>
                         Cancel
                     </button>
-                </div> 
+                </div>
                 :
                 <div>
                     <p>
