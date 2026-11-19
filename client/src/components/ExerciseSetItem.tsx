@@ -24,7 +24,7 @@ function ExerciseSetItem({ exerciseId, exerciseSet, onUpdate, onDelete }: Exerci
 
     function handleSave(event: SubmitEvent<HTMLFormElement>) {
         event.preventDefault()
-        
+
         if (setNumber.trim() === '' || reps.trim() === '') {
             return
         }
@@ -93,15 +93,19 @@ function ExerciseSetItem({ exerciseId, exerciseSet, onUpdate, onDelete }: Exerci
                     <form onSubmit={handleSave}>
                         <input
                             type='number'
+                            required
                             min='1'
                             value={setNumber}
                             onChange={event => setSetNumber(event.target.value)}
+                            placeholder='Set number'
                         />
                         <input
                             type='number'
+                            required
                             min='0'
                             value={reps}
                             onChange={event => setReps(event.target.value)}
+                            placeholder='Reps'
                         />
                         <input
                             type='number'
@@ -109,6 +113,7 @@ function ExerciseSetItem({ exerciseId, exerciseSet, onUpdate, onDelete }: Exerci
                             step='0.5'
                             value={weightKg}
                             onChange={event => setWeightKg(event.target.value)}
+                            placeholder='Weight (kg)'
                         />
                         <input
                             type='number'
@@ -117,6 +122,7 @@ function ExerciseSetItem({ exerciseId, exerciseSet, onUpdate, onDelete }: Exerci
                             step='0.5'
                             value={rpe}
                             onChange={event => setRpe(event.target.value)}
+                            placeholder='RPE'
                         />
                         <button type='submit'>
                             Save

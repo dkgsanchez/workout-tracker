@@ -98,6 +98,8 @@ function ExerciseItem({ exercise, onDelete, onUpdate, onAddSet, onUpdateSet, onD
                             type='text'
                             value={editedName}
                             onChange={handleNameChange}
+                            placeholder='Exercise name'
+                            required
                         />
                         <button type='submit'>
                             Save
