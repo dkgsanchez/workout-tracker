@@ -58,6 +58,81 @@ button {
   padding: 6px 10px;
 }
 
+.exercise-card {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+}
+
+.exercise-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem; 
+}
+
+.exercise-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.set-row {
+  display: flex; 
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  border-top: 1px solid;
+  padding: 0.5rem 0;
+}
+
+.set-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.set-form {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.set-form input {
+  min-width: 0;
+}
+
+.reps-input,
+.rpe-input {
+  flex: 1;
+}
+
+.set-number-input,
+.weight-input {
+  flex: 1.5;
+}
+
+.set-form button {
+  flex-shrink: 0;
+}
+
+.workout-details {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+}
+
+.exercise-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.exercise-form input {
+  flex: 1;
+}
+
 form {
   display: flex;
   gap: 8px;

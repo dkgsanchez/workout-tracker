@@ -90,8 +90,9 @@ function ExerciseSetItem({ exerciseId, exerciseSet, onUpdate, onDelete }: Exerci
         <div>
             {isEditing ?
                 <div>
-                    <form onSubmit={handleSave}>
+                    <form className='set-form' onSubmit={handleSave}>
                         <input
+                            className='set-number-input'
                             type='number'
                             required
                             min='1'
@@ -100,6 +101,7 @@ function ExerciseSetItem({ exerciseId, exerciseSet, onUpdate, onDelete }: Exerci
                             placeholder='Set number'
                         />
                         <input
+                            className='reps-input'
                             type='number'
                             required
                             min='0'
@@ -108,6 +110,7 @@ function ExerciseSetItem({ exerciseId, exerciseSet, onUpdate, onDelete }: Exerci
                             placeholder='Reps'
                         />
                         <input
+                            className='weight-input'
                             type='number'
                             min='0'
                             step='0.5'
@@ -116,6 +119,7 @@ function ExerciseSetItem({ exerciseId, exerciseSet, onUpdate, onDelete }: Exerci
                             placeholder='Weight (kg)'
                         />
                         <input
+                            className='rpe-input'
                             type='number'
                             min='1'
                             max='10'
@@ -127,24 +131,26 @@ function ExerciseSetItem({ exerciseId, exerciseSet, onUpdate, onDelete }: Exerci
                         <button type='submit'>
                             Save
                         </button>
+                        <button type='button' onClick={handleCancel}>
+                            Cancel
+                        </button>
                     </form>
-                    <button onClick={handleCancel}>
-                        Cancel
-                    </button>
                 </div>
                 :
-                <div>
+                <div className='set-row'>
                     <p>
                         Set {exerciseSet.set_number}: {exerciseSet.reps} reps
                         {exerciseSet.weight_kg !== null && ` x ${exerciseSet.weight_kg}kg`}
                         {exerciseSet.rpe !== null && ` @ RPE ${exerciseSet.rpe}`}
                     </p>
-                    <button onClick={handleEdit}>
-                        Edit
-                    </button>
-                    <button onClick={handleDelete}>
-                        Delete
-                    </button>
+                    <div className='set-actions'>
+                        <button onClick={handleEdit}>
+                            Edit
+                        </button>
+                        <button onClick={handleDelete}>
+                            Delete
+                        </button>
+                    </div>
                 </div>
             }
         </div>

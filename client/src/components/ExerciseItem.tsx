@@ -90,9 +90,9 @@ function ExerciseItem({ exercise, onDelete, onUpdate, onAddSet, onUpdateSet, onD
     }
 
     return (
-        <div>
+        <div className='exercise-card'>
             {isEditing ?
-                <div>
+                <div className='exercise-header'>
                     <form onSubmit={handleSave}>
                         <input
                             type='text'
@@ -110,18 +110,21 @@ function ExerciseItem({ exercise, onDelete, onUpdate, onAddSet, onUpdateSet, onD
                     </button>
                 </div>
                 :
-                <div>
+                <div className='exercise-header'>
                     <h3>{exercise.name}</h3>
-                    <button onClick={handleEdit}>
-                        Edit
-                    </button>
+                    <div className='exercise-actions'>
+                        <button onClick={handleEdit}>
+                            Edit
+                        </button>
+                        <button onClick={() => onDelete(exercise.id)}>
+                            Delete
+                        </button>
+                    </div>
                 </div>
             }
-            <button onClick={() => onDelete(exercise.id)}>
-                Delete exercise
-            </button>
-            <form onSubmit={handleAddSet}>
+            <form className='set-form' onSubmit={handleAddSet}>
                 <input
+                    className='set-number-input'
                     type='number'
                     required
                     min='1'
@@ -130,6 +133,7 @@ function ExerciseItem({ exercise, onDelete, onUpdate, onAddSet, onUpdateSet, onD
                     placeholder='Set number'
                 />
                 <input
+                    className='reps-input'
                     type='number'
                     required
                     min='0'
@@ -138,6 +142,7 @@ function ExerciseItem({ exercise, onDelete, onUpdate, onAddSet, onUpdateSet, onD
                     placeholder='Reps'
                 />
                 <input
+                    className='weight-input'
                     type='number'
                     min='0'
                     step='0.5'
@@ -146,6 +151,7 @@ function ExerciseItem({ exercise, onDelete, onUpdate, onAddSet, onUpdateSet, onD
                     placeholder='Weight (kg)'
                 />
                 <input
+                    className='rpe-input'
                     type='number'
                     min='1'
                     max='10'

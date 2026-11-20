@@ -56,7 +56,7 @@ function WorkoutDetails({
                     />
                 ))
             )}
-            <form onSubmit={onAddExercise}>
+            <form className='exercise-form' onSubmit={onAddExercise}>
                 <input
                     type='text'
                     value={exerciseName}
