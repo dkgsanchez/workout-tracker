@@ -1,6 +1,7 @@
 import type { ExerciseWithSets, ExerciseSetUpdates } from '../types/workout'
 import { useState, type ChangeEvent, type SubmitEvent } from 'react'
 import ExerciseSetItem from './ExerciseSetItem'
+import { Button } from '@mantine/core'
 
 type ExerciseItemProps = {
     exercise: ExerciseWithSets
@@ -113,12 +114,17 @@ function ExerciseItem({ exercise, onDelete, onUpdate, onAddSet, onUpdateSet, onD
                 <div className='exercise-header'>
                     <h3>{exercise.name}</h3>
                     <div className='exercise-actions'>
-                        <button onClick={handleEdit}>
+                        <Button variant='light' onClick={handleEdit}>
                             Edit
-                        </button>
-                        <button onClick={() => onDelete(exercise.id)}>
+                        </Button>
+                        <Button 
+                            variant='light' 
+                            color='red' 
+                            type='button' 
+                            onClick={() => onDelete(exercise.id)}
+                        >
                             Delete
-                        </button>
+                        </Button>
                     </div>
                 </div>
             }
